@@ -1,0 +1,36 @@
+# update these to your AWS access credentials
+awsAccessKey = TODO
+awsSecretKey = TODO
+
+# create the following S3 buckets in the US-EAST region for deployment and intermediate data
+resultBucket = TODO
+deployBucket = TODO
+
+# the class you want to use to process your files. This class needs to implement org.webdatacommons.framework.processor.FileProcessor
+processorClass = org.webdatacommons.hyperlinkgraph.processor.WatProcessor
+
+# everything below should not be changed unless you are Hannes or know what you are doing
+dataBucket = aws-publicdatasets
+dataPrefix = common-crawl/crawl-data
+
+jobQueueName = jobs
+queueEndpoint = https://queue.amazonaws.com/
+
+deployFilename = pdef.jar
+jobTimeLimit = 900
+jobRetryLimit = 3
+
+ec2endpoint = ec2.us-east-1.amazonaws.com
+ec2ami = ami-018c9568
+ec2instancetype = c1.xlarge
+ec2keypair = ccrdf-useast
+javamemory = 5G
+
+sdbdatadomain = data
+sdberrordomain = failures
+
+logRegexFailures = false
+
+batchsize = 10
+minResults = 5
+dataSuffix = .wat.gz

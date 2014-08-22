@@ -7,9 +7,9 @@ awsSecretKey = TODO
 ec2keypair = TODO
 
 # AWS S3 Properties
-## Your S3 Bucket name for results (with region US-EAST)
+## Your S3 Bucket name for results
 resultBucket = TODO
-## Your S3 Bucket for the code to be deployed on the EC2 instances (within region US-EAST)
+## Your S3 Bucket for the code to be deployed on the EC2 instances
 deployBucket = TODO
 # AWS S3 data bucket prefix for public datasets (No need to change, unless you want to process other data than CC)
 dataBucket = aws-publicdatasets

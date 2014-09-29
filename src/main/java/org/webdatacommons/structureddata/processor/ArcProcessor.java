@@ -34,6 +34,7 @@ import com.martiansoftware.jsap.UnflaggedOption;
  * 
  * @author Hannes Muehleisen (hannes@muehleisen.org)
  */
+//TODO LOW move this to the new structure and let it implement FileProcessor
 public class ArcProcessor {
 	private static Logger log = Logger.getLogger(ArcProcessor.class);
 

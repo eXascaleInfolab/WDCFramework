@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.Channels;
@@ -55,18 +56,32 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 	public Map<String, String> process(ReadableByteChannel fileChannel,
 			String inputFileKey) throws Exception {
 
-		// create a tmp file to write the output to
-		File tempOutputFile = File.createTempFile("ccrdf-extraction", ".nq.gz");
+		// create a tmp file to write the output for the triples to
+		File tempOutputFile = File.createTempFile("dpef-triple-extraction",
+				".nq.gz");
 		tempOutputFile.deleteOnExit();
+
 		OutputStream tempOutputStream = new GZIPOutputStream(
 				new FileOutputStream(tempOutputFile));
 		RDFExtractor extractor = new RDFExtractor(tempOutputStream);
+
+		// create file and stream for URLs.
+		File tempOutputUrlFile = File.createTempFile("dpef-url-extraction",
+				".nq.gz");
+		tempOutputFile.deleteOnExit();
+
+		BufferedWriter urlBW = new BufferedWriter(new OutputStreamWriter(
+				new GZIPOutputStream(new FileOutputStream(tempOutputUrlFile)),
+				"UTF-8"));
 
 		// set name for data output
 		String outputFileKey = "data/ex_" + inputFileKey.replace("/", "_")
 				+ ".nq.gz";
 		// set name for stat output
 		String outputStatsKey = "stats/ex_" + inputFileKey.replace("/", "_")
+				+ ".csv.gz";
+		// set name for url output
+		String outputUrlKey = "urls/ex_" + inputFileKey.replace("/", "_")
 				+ ".csv.gz";
 
 		// default is false
@@ -108,10 +123,6 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 		// read all entries in the ARC file
 		while (readerIt.hasNext()) {
 
-			if (pagesTotal % 1000 == 0) {
-				log.info(pagesTotal + " / " + pagesParsed + " / "
-						+ pagesTriples + " / " + pagesErrors);
-			}
 			ArchiveRecord record = readerIt.next();
 			ArchiveRecordHeader header = record.getHeader();
 			ArcFileItem item = new ArcFileItem();
@@ -124,10 +135,17 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 					"application/http; msgtype=response")) {
 				continue;
 			}
+			if (pagesTotal % 1000 == 0) {
+				log.info(pagesTotal + " / " + pagesParsed + " / "
+						+ pagesTriples + " / " + pagesErrors);
+			}
 
 			try {
+
 				uri = new URI(header.getUrl());
 				String host = uri.getHost();
+				// we only write if its valid
+				urlBW.write(uri.toString() + "\n");
 				if (host == null) {
 					continue;
 				}
@@ -222,20 +240,21 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 				// do nothing;
 			}
 		}
+		// we close the stream
+		urlBW.close();
 		pageStatHandler.flush();
-		
+
 		/**
 		 * write extraction results to s3, if at least one included item was
 		 * guessed to include triples
 		 */
-		
+
 		if (pagesGuessedTriples > 0) {
 			S3Object dataFileObject = new S3Object(tempOutputFile);
 			dataFileObject.setKey(outputFileKey);
 			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
 
-			S3Object statsFileObject = new S3Object(
-					pageStatHandler.getFile());
+			S3Object statsFileObject = new S3Object(pageStatHandler.getFile());
 			statsFileObject.setKey(outputStatsKey);
 			getStorage().putObject(getOrCry("resultBucket"), statsFileObject);
 		}

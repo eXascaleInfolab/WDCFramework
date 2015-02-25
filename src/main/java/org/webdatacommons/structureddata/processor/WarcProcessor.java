@@ -186,7 +186,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 						if (result.getTotalTriples() > 0) {
 							pagesTriples++;
 						} else {
-							log.warn("Could not find any triple in file, although guesser found something.");
+							log.debug("Could not find any triple in file, although guesser found something.");
 							if (logRegexError) {
 								String documentContent = item.getContent()
 										.toString("UTF-8");

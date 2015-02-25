@@ -22,6 +22,8 @@ import org.apache.any23.extractor.ExtractionException;
 import org.apache.any23.extractor.ExtractionParameters;
 import org.apache.any23.extractor.ExtractorFactory;
 import org.apache.any23.extractor.ExtractorGroup;
+import org.apache.any23.extractor.html.AdrExtractor;
+import org.apache.any23.extractor.html.AdrExtractorFactory;
 import org.apache.any23.extractor.html.GeoExtractorFactory;
 import org.apache.any23.extractor.html.HCalendarExtractorFactory;
 import org.apache.any23.extractor.html.HCardExtractorFactory;
@@ -56,25 +58,27 @@ public class RDFExtractor {
 
 	public final static List<String> EXTRACTORS = Arrays.asList("html-rdfa",
 			"html-rdfa11", "html-microdata", "html-mf-geo",
-			"html-mf-hcalendar", "html-mf-hcard", "html-mf-hlisting",
-			"html-mf-hresume", "html-mf-hreview", "html-mf-species",
-			"html-mf-hrecipe", "html-mf-xfn", "html-head-meta");
+			"html-mf-hcalendar", "html-mf-hcard", "html-mf-adr",
+			"html-mf-hlisting", "html-mf-hresume", "html-mf-hreview",
+			"html-mf-species", "html-mf-hrecipe", "html-mf-xfn",
+			"html-head-meta");
 
 	private static ExtractorGroup extractorGroup;
 	static {
 		List<ExtractorFactory<?>> factories = new ArrayList<ExtractorFactory<?>>();
 		factories.add(new BaselessRDFaExtractorFactory());
-        //factories.add(new RDFaExtractorFactory());
-		//factories.add(new RDFa11ExtractorFactory());
+		// factories.add(new RDFaExtractorFactory());
+		// factories.add(new RDFa11ExtractorFactory());
 		factories.add(new MicrodataExtractorFactory());
 		factories.add(new GeoExtractorFactory());
 		factories.add(new HCalendarExtractorFactory());
 		factories.add(new HCardExtractorFactory());
+		factories.add(new AdrExtractorFactory());
 		factories.add(new HListingExtractorFactory());
 		factories.add(new HResumeExtractorFactory());
 		factories.add(new HReviewExtractorFactory());
 		factories.add(new SpeciesExtractorFactory());
-		//factories.add(new WDCHTMLMetaExtractorFactory());
+		// factories.add(new WDCHTMLMetaExtractorFactory());
 		factories.add(new HRecipeExtractorFactory());
 		factories.add(new XFNExtractorFactory());
 		extractorGroup = new ExtractorGroup(factories);
@@ -84,6 +88,7 @@ public class RDFExtractor {
 	static {
 		Map<String, String> guessers = new HashMap<String, String>();
 
+		//TODO check if we need to exclude the <meta beforehand to reduce the number of false positives
 		guessers.put("html-rdfa", "(property|typeof|about|resource)\\s*=");
 		guessers.put("html-microdata", "(itemscope|itemprop\\s*=)");
 

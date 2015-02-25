@@ -50,7 +50,7 @@ import java.io.*;
 public class BaselessRDFaExtractor implements TagSoupDOMExtractor {
     public final static String NAME = "html-rdfa";
 
-    public final static String xsltFilename = "baselessRdfa.xslt";
+    public final static String xsltFilename = "/baselessRdfa.xslt";
 
     private static XSLTStylesheet xslt = null;
 

@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,7 +23,6 @@ import org.apache.any23.extractor.ExtractionException;
 import org.apache.any23.extractor.ExtractionParameters;
 import org.apache.any23.extractor.ExtractorFactory;
 import org.apache.any23.extractor.ExtractorGroup;
-import org.apache.any23.extractor.html.AdrExtractor;
 import org.apache.any23.extractor.html.AdrExtractorFactory;
 import org.apache.any23.extractor.html.GeoExtractorFactory;
 import org.apache.any23.extractor.html.HCalendarExtractorFactory;
@@ -88,7 +88,8 @@ public class RDFExtractor {
 	static {
 		Map<String, String> guessers = new HashMap<String, String>();
 
-		//TODO check if we need to exclude the <meta beforehand to reduce the number of false positives
+		// TODO check if we need to exclude the <meta beforehand to reduce the
+		// number of false positives
 		guessers.put("html-rdfa", "(property|typeof|about|resource)\\s*=");
 		guessers.put("html-microdata", "(itemscope|itemprop\\s*=)");
 
@@ -144,14 +145,14 @@ public class RDFExtractor {
 	ExtractionParameters any23ExParams;
 	private OutputStreamWriter outputStreamWriter;
 
-	public RDFExtractor(OutputStream output) {
+	public RDFExtractor(OutputStream output) throws UnsupportedEncodingException {
 		any23ExParams = ExtractionParameters.newDefault();
 		any23ExParams.setFlag("any23.extraction.metadata.timesize", false);
 		any23ExParams.setFlag("any23.extraction.head.meta", false);
 
 		any23Parser = new Any23(extractorGroup);
 
-		this.outputStreamWriter = new OutputStreamWriter(output);
+		this.outputStreamWriter = new OutputStreamWriter(output, "UTF-8");
 	}
 
 	public static class ExtractorResult {

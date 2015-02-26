@@ -253,7 +253,7 @@ public class RDFExtractor {
 			}
 
 			DocumentSource any23Source = new ByteArrayDocumentSource(
-					documentContent.getBytes(), item.getUri(),
+					documentContent.getBytes("UTF-8"), item.getUri(),
 					item.getMimeType());
 
 			FilterableTripleHandler writer = new FilterableTripleHandler(

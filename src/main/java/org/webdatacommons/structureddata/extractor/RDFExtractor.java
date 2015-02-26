@@ -90,8 +90,8 @@ public class RDFExtractor {
 
 		// TODO check if we need to exclude the <meta beforehand to reduce the
 		// number of false positives
-		guessers.put("html-rdfa", "(property|typeof|about|resource)\\s*=");
-		guessers.put("html-microdata", "(itemscope|itemprop\\s*=)");
+		guessers.put("html-rdfa", "[^<meta]+\\s(property|typeof|about|resource)\\s*=");
+		guessers.put("html-microdata", "[^<meta]+\\s(itemscope|itemprop\\s*=)");
 
 		// microdata guessers
 		guessers.put("html-mf-geo", "class\\s*=\\s*(\"|')[^\"']*geo");

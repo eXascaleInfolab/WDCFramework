@@ -261,6 +261,12 @@ public class Master extends ProcessingNode {
 			+ "\" \n java -Xmx"
 			+ getOrCry("javamemory").trim()
 			+ " -jar /tmp/start.jar > /tmp/start.log & \n";
+	
+//	private final String startupScript = "#!/bin/bash \n echo 1 > /proc/sys/vm/overcommit_memory \n aptitude update \n aptitude -y install java7-jdk htop \n wget -O /tmp/start.jar \""
+//			+ getJarUrl()
+//			+ "\" \n java -Xmx"
+//			+ getOrCry("javamemory").trim()
+//			+ " -jar /tmp/start.jar > /tmp/start.log & \n";
 
 	private static Logger log = Logger.getLogger(Master.class);
 

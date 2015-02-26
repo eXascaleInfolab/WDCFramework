@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -52,6 +54,11 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 
 	private static Logger log = Logger.getLogger(WarcProcessor.class);
 
+	// FIXME remove this if you do not want to get the links
+	Pattern linkPattern = Pattern.compile(
+			"<a[^>]+href=[\\\"']?([^\\\"']+)[\"']?[^>]*>(.+?)</a>",
+			Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
 	@Override
 	public Map<String, String> process(ReadableByteChannel fileChannel,
 			String inputFileKey) throws Exception {
@@ -74,6 +81,15 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 				new GZIPOutputStream(new FileOutputStream(tempOutputUrlFile)),
 				"UTF-8"));
 
+		// create file and stream for anchor.
+		File tempOutputAnchorFile = File.createTempFile(
+				"dpef-anchor-extraction", ".nq.gz");
+		tempOutputFile.deleteOnExit();
+
+		BufferedWriter anchorBW = new BufferedWriter(
+				new OutputStreamWriter(new GZIPOutputStream(
+						new FileOutputStream(tempOutputAnchorFile)), "UTF-8"));
+
 		// set name for data output
 		String outputFileKey = "data/ex_" + inputFileKey.replace("/", "_")
 				+ ".nq.gz";
@@ -82,6 +98,9 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 				+ ".csv.gz";
 		// set name for url output
 		String outputUrlKey = "urls/ex_" + inputFileKey.replace("/", "_")
+				+ ".csv.gz";
+		// set name for anchor output
+		String outputAnchorKey = "anchor/ex_" + inputFileKey.replace("/", "_")
 				+ ".csv.gz";
 
 		// default is false
@@ -107,6 +126,8 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 		long pagesGuessedTriples = 0;
 		// number of pages including at least one triple
 		long pagesTriples = 0;
+		// number of anchors included in the pages
+		long anchorTotal = 0;
 		// current time of the system when starting process.
 		long start = System.currentTimeMillis();
 
@@ -181,6 +202,28 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 				if (extractor.supports(item.getMimeType())) {
 					// do extraction (woo ho)
 					pagesParsed++;
+
+					// FIXME we can remove this if we do not want the
+					// anchors to
+					// be written
+					String docCont = item.getContent().toString("UTF-8");
+					if (docCont.contains("wikipedia.")) {
+						// now go through all the links and check weather
+						// they
+						// are good or not
+						Matcher pageMatcher = linkPattern.matcher(docCont);
+						// ArrayList<String> links = new
+						// ArrayList<String>();
+						while (pageMatcher.find()) {
+							if (pageMatcher.group(1).contains("wikipedia.")) {
+								anchorBW.write(uri.toURL() + "\t"
+										+ pageMatcher.group(2) + "\t"
+										+ pageMatcher.group(1) + "\n");
+								anchorTotal++;
+							}
+						}
+						// TODO remember to write the file in the end
+					}
 
 					ExtractorResult result = extractor.extract(item);
 
@@ -257,6 +300,18 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			S3Object statsFileObject = new S3Object(pageStatHandler.getFile());
 			statsFileObject.setKey(outputStatsKey);
 			getStorage().putObject(getOrCry("resultBucket"), statsFileObject);
+		}
+
+		if (pagesTotal > 0) {
+			S3Object dataFileObject = new S3Object(tempOutputUrlFile);
+			dataFileObject.setKey(outputUrlKey);
+			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
+		}
+
+		if (anchorTotal > 0) {
+			S3Object dataFileObject = new S3Object(tempOutputAnchorFile);
+			dataFileObject.setKey(outputAnchorKey);
+			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
 		}
 
 		double duration = (System.currentTimeMillis() - start) / 1000.0;

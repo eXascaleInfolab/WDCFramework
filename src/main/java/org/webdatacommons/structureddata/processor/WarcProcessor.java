@@ -55,9 +55,10 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 	private static Logger log = Logger.getLogger(WarcProcessor.class);
 
 	// FIXME remove this if you do not want to get the links
-	Pattern linkPattern = Pattern.compile(
-			"<a[^>]+href=[\\\"']?([^\\\"']+)[\"']?[^>]*>(.+?)</a>",
-			Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	Pattern linkPattern = Pattern
+			.compile(
+					"<a[^>]+href=[\\\"']?([^\\\"']+wikipedia[^\\\"']+)[\"']?[^>]*>(.+?)</a>",
+					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 	@Override
 	public Map<String, String> process(ReadableByteChannel fileChannel,
@@ -207,22 +208,25 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 					// anchors to
 					// be written
 					String docCont = item.getContent().toString("UTF-8");
-					if (docCont.contains("wikipedia.")) {
-						// now go through all the links and check weather
-						// they
-						// are good or not
-						Matcher pageMatcher = linkPattern.matcher(docCont);
-						// ArrayList<String> links = new
-						// ArrayList<String>();
-						while (pageMatcher.find()) {
-							if (pageMatcher.group(1).contains("wikipedia.")) {
-								anchorBW.write(uri.toURL() + "\t"
-										+ pageMatcher.group(2) + "\t"
-										+ pageMatcher.group(1) + "\n");
-								anchorTotal++;
+					// we only write anchors from not wikipedia pages
+					if (!uri.toString().contains("wikipedia")) {
+						if (docCont.contains("wikipedia.")) {
+							// now go through all the links and check weather
+							// they
+							// are good or not
+							Matcher pageMatcher = linkPattern.matcher(docCont);
+							// ArrayList<String> links = new
+							// ArrayList<String>();
+							while (pageMatcher.find()) {
+							//	if (pageMatcher.group(1).contains("wikipedia.")) {
+									anchorBW.write(uri.toURL() + "\t"
+											+ pageMatcher.group(2) + "\t"
+											+ pageMatcher.group(1) + "\n");
+									anchorTotal++;
+							//	}
 							}
+							// TODO remember to write the file in the end
 						}
-						// TODO remember to write the file in the end
 					}
 
 					ExtractorResult result = extractor.extract(item);

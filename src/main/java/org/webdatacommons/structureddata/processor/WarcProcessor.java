@@ -64,280 +64,301 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 	public Map<String, String> process(ReadableByteChannel fileChannel,
 			String inputFileKey) throws Exception {
 
-		// create a tmp file to write the output for the triples to
-		File tempOutputFile = File.createTempFile("dpef-triple-extraction",
-				".nq.gz");
-		tempOutputFile.deleteOnExit();
+		try {
 
-		OutputStream tempOutputStream = new GZIPOutputStream(
-				new FileOutputStream(tempOutputFile));
-		RDFExtractor extractor = new RDFExtractor(tempOutputStream);
+			// create a tmp file to write the output for the triples to
+			File tempOutputFile = File.createTempFile("dpef-triple-extraction",
+					".nq.gz");
+			tempOutputFile.deleteOnExit();
 
-		// create file and stream for URLs.
-		File tempOutputUrlFile = File.createTempFile("dpef-url-extraction",
-				".nq.gz");
-		tempOutputFile.deleteOnExit();
+			OutputStream tempOutputStream = new GZIPOutputStream(
+					new FileOutputStream(tempOutputFile));
+			RDFExtractor extractor = new RDFExtractor(tempOutputStream);
 
-		BufferedWriter urlBW = new BufferedWriter(new OutputStreamWriter(
-				new GZIPOutputStream(new FileOutputStream(tempOutputUrlFile)),
-				"UTF-8"));
+			// create file and stream for URLs.
+			File tempOutputUrlFile = File.createTempFile("dpef-url-extraction",
+					".nq.gz");
+			tempOutputFile.deleteOnExit();
 
-		// create file and stream for anchor.
-		File tempOutputAnchorFile = File.createTempFile(
-				"dpef-anchor-extraction", ".nq.gz");
-		tempOutputFile.deleteOnExit();
+			BufferedWriter urlBW = new BufferedWriter(new OutputStreamWriter(
+					new GZIPOutputStream(
+							new FileOutputStream(tempOutputUrlFile)), "UTF-8"));
 
-		BufferedWriter anchorBW = new BufferedWriter(
-				new OutputStreamWriter(new GZIPOutputStream(
-						new FileOutputStream(tempOutputAnchorFile)), "UTF-8"));
+			// create file and stream for anchor.
+			File tempOutputAnchorFile = File.createTempFile(
+					"dpef-anchor-extraction", ".nq.gz");
+			tempOutputFile.deleteOnExit();
 
-		// set name for data output
-		String outputFileKey = "data/ex_" + inputFileKey.replace("/", "_")
-				+ ".nq.gz";
-		// set name for stat output
-		String outputStatsKey = "stats/ex_" + inputFileKey.replace("/", "_")
-				+ ".csv.gz";
-		// set name for url output
-		String outputUrlKey = "urls/ex_" + inputFileKey.replace("/", "_")
-				+ ".csv.gz";
-		// set name for anchor output
-		String outputAnchorKey = "anchor/ex_" + inputFileKey.replace("/", "_")
-				+ ".csv.gz";
+			BufferedWriter anchorBW = new BufferedWriter(
+					new OutputStreamWriter(new GZIPOutputStream(
+							new FileOutputStream(tempOutputAnchorFile)),
+							"UTF-8"));
 
-		// default is false
-		boolean logRegexError = Boolean
-				.parseBoolean(getOrCry("logRegexFailures"));
+			// set name for data output
+			String outputFileKey = "data/ex_" + inputFileKey.replace("/", "_")
+					+ ".nq.gz";
+			// set name for stat output
+			String outputStatsKey = "stats/ex_"
+					+ inputFileKey.replace("/", "_") + ".csv.gz";
+			// set name for url output
+			String outputUrlKey = "urls/ex_" + inputFileKey.replace("/", "_")
+					+ ".csv.gz";
+			// set name for anchor output
+			String outputAnchorKey = "anchor/ex_"
+					+ inputFileKey.replace("/", "_") + ".csv.gz";
 
-		// get handler for page stats
-		CSVStatHandler pageStatHandler = new CSVStatHandler();
+			// default is false
+			boolean logRegexError = Boolean
+					.parseBoolean(getOrCry("logRegexFailures"));
 
-		// get archive reader
-		final ArchiveReader reader = ArchiveReaderFactory.get(inputFileKey,
-				Channels.newInputStream(fileChannel), true);
+			// get handler for page stats
+			CSVStatHandler pageStatHandler = new CSVStatHandler();
 
-		log.info("Extracting data from " + inputFileKey + " ...");
+			// get archive reader
+			final ArchiveReader reader = ArchiveReaderFactory.get(inputFileKey,
+					Channels.newInputStream(fileChannel), true);
 
-		// number of pages visited for extraction
-		long pagesTotal = 0;
-		// number of pages parsed based on supported mime-type
-		long pagesParsed = 0;
-		// number of pages which contain an error
-		long pagesErrors = 0;
-		// number of pages which are likely to include triples
-		long pagesGuessedTriples = 0;
-		// number of pages including at least one triple
-		long pagesTriples = 0;
-		// number of anchors included in the pages
-		long anchorTotal = 0;
-		// current time of the system when starting process.
-		long start = System.currentTimeMillis();
+			log.info("Extracting data from " + inputFileKey + " ...");
 
-		// TODO LOW write regex detection errors into SDB
-		BufferedWriter bwriter = null;
-		if (logRegexError) {
-			FileWriter writer = new FileWriter(new File("regexFail_"
-					+ inputFileKey.replace("/", "_") + ".txt"));
-			bwriter = new BufferedWriter(writer);
-		}
+			// number of pages visited for extraction
+			long pagesTotal = 0;
+			// number of pages parsed based on supported mime-type
+			long pagesParsed = 0;
+			// number of pages which contain an error
+			long pagesErrors = 0;
+			// number of pages which are likely to include triples
+			long pagesGuessedTriples = 0;
+			// number of pages including at least one triple
+			long pagesTriples = 0;
+			// number of anchors included in the pages
+			long anchorTotal = 0;
+			// current time of the system when starting process.
+			long start = System.currentTimeMillis();
 
-		Iterator<ArchiveRecord> readerIt = reader.iterator();
-
-		// read all entries in the ARC file
-		while (readerIt.hasNext()) {
-
-			ArchiveRecord record = readerIt.next();
-			ArchiveRecordHeader header = record.getHeader();
-			ArcFileItem item = new ArcFileItem();
-			URI uri;
-
-			item.setArcFileName(inputFileKey);
-
-			// WARC contains lots of stuff. We only want HTTP responses
-			if (!header.getMimetype().equals(
-					"application/http; msgtype=response")) {
-				continue;
-			}
-			if (pagesTotal % 1000 == 0) {
-				log.info(pagesTotal + " / " + pagesParsed + " / "
-						+ pagesTriples + " / " + pagesErrors);
+			// TODO LOW write regex detection errors into SDB
+			BufferedWriter bwriter = null;
+			if (logRegexError) {
+				FileWriter writer = new FileWriter(new File("regexFail_"
+						+ inputFileKey.replace("/", "_") + ".txt"));
+				bwriter = new BufferedWriter(writer);
 			}
 
-			try {
+			Iterator<ArchiveRecord> readerIt = reader.iterator();
 
-				uri = new URI(header.getUrl());
-				String host = uri.getHost();
-				// we only write if its valid
-				urlBW.write(uri.toString() + "\n");
-				if (host == null) {
+			// read all entries in the ARC file
+			while (readerIt.hasNext()) {
+
+				ArchiveRecord record = readerIt.next();
+				ArchiveRecordHeader header = record.getHeader();
+				ArcFileItem item = new ArcFileItem();
+				URI uri;
+
+				item.setArcFileName(inputFileKey);
+
+				// WARC contains lots of stuff. We only want HTTP responses
+				if (!header.getMimetype().equals(
+						"application/http; msgtype=response")) {
 					continue;
 				}
-			} catch (URISyntaxException e) {
-				log.error("Invalid URI!!!", e);
-				continue;
-			}
+				if (pagesTotal % 1000 == 0) {
+					log.info(pagesTotal + " / " + pagesParsed + " / "
+							+ pagesTriples + " / " + pagesErrors);
+				}
 
-			String headers[] = WARCRecordUtils.getHeaders(record, true).split(
-					"\n");
-			if (headers.length < 1) {
-				pagesTotal++;
-				continue;
-			}
+				try {
 
-			// only consider HTML responses
-			String contentType = headerKeyValue(headers, "Content-Type",
-					"text/html");
-			if (!contentType.contains("html")) {
-				pagesTotal++;
-				continue;
-			}
-
-			byte[] bytes = IOUtils.toByteArray(WARCRecordUtils
-					.getPayload(record));
-
-			if (bytes.length > 0) {
-
-				item.setMimeType(contentType);
-				item.setContent(new FlexBuffer(bytes, true));
-				item.setUri(uri.toString());
-
-				if (extractor.supports(item.getMimeType())) {
-					// do extraction (woo ho)
-					pagesParsed++;
-
-					// FIXME we can remove this if we do not want the
-					// anchors to
-					// be written
-					String docCont = item.getContent().toString("UTF-8");
-					// we only write anchors from not wikipedia pages
-					if (!uri.toString().contains("wikipedia")) {
-						if (docCont.contains("wikipedia.")) {
-							// now go through all the links and check weather
-							// they
-							// are good or not
-							Matcher pageMatcher = linkPattern.matcher(docCont);
-							// ArrayList<String> links = new
-							// ArrayList<String>();
-							while (pageMatcher.find()) {
-							//	if (pageMatcher.group(1).contains("wikipedia.")) {
-									anchorBW.write(uri.toURL() + "\t"
-											+ pageMatcher.group(2) + "\t"
-											+ pageMatcher.group(1) + "\n");
-									anchorTotal++;
-							//	}
-							}
-							// TODO remember to write the file in the end
-						}
-					}
-
-					ExtractorResult result = extractor.extract(item);
-
-					// if we had an error, increment error count
-					if (result.hadError()) {
-						pagesErrors++;
-						pagesTotal++;
+					uri = new URI(header.getUrl());
+					String host = uri.getHost();
+					// we only write if its valid
+					urlBW.write(uri.toString() + "\n");
+					if (host == null) {
 						continue;
 					}
-					// if we found no triples, continue
-					if (result.hadResults()) {
-						// collect some other statistics
-						Map<String, String> stats = new HashMap<String, String>();
-						stats.putAll(itemStats(item));
-						stats.putAll(result.getExtractorTriples());
-						stats.putAll(result.getReferencedData());
-						stats.put("detectedMimeType", result.getMimeType());
-						stats.put("totalTriples",
-								Long.toString(result.getTotalTriples()));
+				} catch (URISyntaxException e) {
+					log.error("Invalid URI!!!", e);
+					continue;
+				}
 
-						if (result.getTotalTriples() > 0) {
-							pagesTriples++;
-						} else {
-							log.debug("Could not find any triple in file, although guesser found something.");
-							if (logRegexError) {
-								String documentContent = item.getContent()
-										.toString("UTF-8");
-								bwriter.write("[Item without triple on position: "
-										+ item.getArcFilePos() + "]\n\n");
-								for (String key : result.getReferencedData()
-										.keySet()) {
-									bwriter.write(key
-											+ " : "
-											+ result.getReferencedData().get(
-													key) + "\n");
+				String headers[] = WARCRecordUtils.getHeaders(record, true)
+						.split("\n");
+				if (headers.length < 1) {
+					pagesTotal++;
+					continue;
+				}
+
+				// only consider HTML responses
+				String contentType = headerKeyValue(headers, "Content-Type",
+						"text/html");
+				if (!contentType.contains("html")) {
+					pagesTotal++;
+					continue;
+				}
+
+				byte[] bytes = IOUtils.toByteArray(WARCRecordUtils
+						.getPayload(record));
+
+				if (bytes.length > 0) {
+
+					item.setMimeType(contentType);
+					item.setContent(new FlexBuffer(bytes, true));
+					item.setUri(uri.toString());
+
+					if (extractor.supports(item.getMimeType())) {
+						// do extraction (woo ho)
+						pagesParsed++;
+
+						// FIXME we can remove this if we do not want the
+						// anchors to
+						// be written
+						String docCont = item.getContent().toString("UTF-8");
+						// we only write anchors from not wikipedia pages
+						if (!uri.toString().contains("wikipedia")) {
+							if (docCont.contains("wikipedia.")) {
+								// now go through all the links and check
+								// weather
+								// they
+								// are good or not
+								Matcher pageMatcher = linkPattern
+										.matcher(docCont);
+								// ArrayList<String> links = new
+								// ArrayList<String>();
+								while (pageMatcher.find()) {
+									// if
+									// (pageMatcher.group(1).contains("wikipedia."))
+									// {
+									anchorBW.write(uri.toURL()
+											+ "\t"
+											+ pageMatcher.group(2)
+													.replace("\n", " ")
+													.replace("\r", " ")
+													.replace("\t", " ") + "\t"
+											+ pageMatcher.group(1) + "\n");
+									anchorTotal++;
+									// }
 								}
-								bwriter.write("\n");
-								bwriter.write(documentContent);
-								bwriter.write("\n\n\n#########################\n\n\n");
+								// TODO remember to write the file in the end
 							}
 						}
 
-						// write statistics
-						pageStatHandler.addStats(item.getUri(), stats);
-						pagesGuessedTriples++;
+						ExtractorResult result = extractor.extract(item);
+
+						// if we had an error, increment error count
+						if (result.hadError()) {
+							pagesErrors++;
+							pagesTotal++;
+							continue;
+						}
+						// if we found no triples, continue
+						if (result.hadResults()) {
+							// collect some other statistics
+							Map<String, String> stats = new HashMap<String, String>();
+							stats.putAll(itemStats(item));
+							stats.putAll(result.getExtractorTriples());
+							stats.putAll(result.getReferencedData());
+							stats.put("detectedMimeType", result.getMimeType());
+							stats.put("totalTriples",
+									Long.toString(result.getTotalTriples()));
+
+							if (result.getTotalTriples() > 0) {
+								pagesTriples++;
+							} else {
+								log.debug("Could not find any triple in file, although guesser found something.");
+								if (logRegexError) {
+									String documentContent = item.getContent()
+											.toString("UTF-8");
+									bwriter.write("[Item without triple on position: "
+											+ item.getArcFilePos() + "]\n\n");
+									for (String key : result
+											.getReferencedData().keySet()) {
+										bwriter.write(key
+												+ " : "
+												+ result.getReferencedData()
+														.get(key) + "\n");
+									}
+									bwriter.write("\n");
+									bwriter.write(documentContent);
+									bwriter.write("\n\n\n#########################\n\n\n");
+								}
+							}
+							
+							// write statistics about pages without errors but not necessary with triples
+							pageStatHandler.addStats(item.getUri(), stats);
+							pagesGuessedTriples++;							
+						}
 					}
+					pagesTotal++;
 				}
-				pagesTotal++;
-
 			}
-		}
-		if (logRegexError) {
-			bwriter.flush();
-			try {
-				bwriter.close();
-			} catch (IOException e) {
-				// do nothing;
+			if (logRegexError) {
+				bwriter.flush();
+				try {
+					bwriter.close();
+				} catch (IOException e) {
+					// do nothing;
+				}
 			}
+			// we close the stream
+			urlBW.close();
+			anchorBW.close();
+			pageStatHandler.flush();
+
+			/**
+			 * write extraction results to s3, if at least one included item was
+			 * guessed to include triples
+			 */
+
+			if (pagesGuessedTriples > 0) {
+				S3Object dataFileObject = new S3Object(tempOutputFile);
+				dataFileObject.setKey(outputFileKey);
+				getStorage()
+						.putObject(getOrCry("resultBucket"), dataFileObject);
+
+				S3Object statsFileObject = new S3Object(
+						pageStatHandler.getFile());
+				statsFileObject.setKey(outputStatsKey);
+				getStorage().putObject(getOrCry("resultBucket"),
+						statsFileObject);
+			}
+
+			if (pagesTotal > 0) {
+				S3Object dataFileObject = new S3Object(tempOutputUrlFile);
+				dataFileObject.setKey(outputUrlKey);
+				getStorage()
+						.putObject(getOrCry("resultBucket"), dataFileObject);
+			}
+
+			if (anchorTotal > 0) {
+				S3Object dataFileObject = new S3Object(tempOutputAnchorFile);
+				dataFileObject.setKey(outputAnchorKey);
+				getStorage()
+						.putObject(getOrCry("resultBucket"), dataFileObject);
+			}
+
+			double duration = (System.currentTimeMillis() - start) / 1000.0;
+			double rate = (pagesTotal * 1.0) / duration;
+
+			// create data file statistics and return
+			Map<String, String> dataStats = new HashMap<String, String>();
+			dataStats.put("duration", Double.toString(duration));
+			dataStats.put("rate", Double.toString(rate));
+			dataStats.put("pagesTotal", Long.toString(pagesTotal));
+			dataStats.put("pagesParsed", Long.toString(pagesParsed));
+			dataStats.put(PAGES_GUESSED_TRIPLES,
+					Long.toString(pagesGuessedTriples));
+			dataStats.put(PAGES_TRIPLES, Long.toString(pagesTriples));
+			dataStats.put("pagesErrors", Long.toString(pagesErrors));
+
+			log.info("Extracted data from " + inputFileKey + " - parsed "
+					+ pagesParsed + " pages in " + duration + " seconds, "
+					+ rate + " pages/sec");
+
+			reader.close();
+			return dataStats;
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+			throw new Exception(e.fillInStackTrace());
 		}
-		// we close the stream
-		urlBW.close();
-		pageStatHandler.flush();
-
-		/**
-		 * write extraction results to s3, if at least one included item was
-		 * guessed to include triples
-		 */
-
-		if (pagesGuessedTriples > 0) {
-			S3Object dataFileObject = new S3Object(tempOutputFile);
-			dataFileObject.setKey(outputFileKey);
-			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
-
-			S3Object statsFileObject = new S3Object(pageStatHandler.getFile());
-			statsFileObject.setKey(outputStatsKey);
-			getStorage().putObject(getOrCry("resultBucket"), statsFileObject);
-		}
-
-		if (pagesTotal > 0) {
-			S3Object dataFileObject = new S3Object(tempOutputUrlFile);
-			dataFileObject.setKey(outputUrlKey);
-			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
-		}
-
-		if (anchorTotal > 0) {
-			S3Object dataFileObject = new S3Object(tempOutputAnchorFile);
-			dataFileObject.setKey(outputAnchorKey);
-			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
-		}
-
-		double duration = (System.currentTimeMillis() - start) / 1000.0;
-		double rate = (pagesTotal * 1.0) / duration;
-
-		// create data file statistics and return
-		Map<String, String> dataStats = new HashMap<String, String>();
-		dataStats.put("duration", Double.toString(duration));
-		dataStats.put("rate", Double.toString(rate));
-		dataStats.put("pagesTotal", Long.toString(pagesTotal));
-		dataStats.put("pagesParsed", Long.toString(pagesParsed));
-		dataStats
-				.put(PAGES_GUESSED_TRIPLES, Long.toString(pagesGuessedTriples));
-		dataStats.put(PAGES_TRIPLES, Long.toString(pagesTriples));
-		dataStats.put("pagesErrors", Long.toString(pagesErrors));
-
-		log.info("Extracted data from " + inputFileKey + " - parsed "
-				+ pagesParsed + " pages in " + duration + " seconds, " + rate
-				+ " pages/sec");
-
-		reader.close();
-		return dataStats;
 	}
 
 	public static final String PAGES_GUESSED_TRIPLES = "pagesGuessedTriples";

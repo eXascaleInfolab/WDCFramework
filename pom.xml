@@ -326,10 +326,10 @@
 			<version>0.11.0</version>
 		</dependency>
 		<dependency>
-			<groupId>de.uni_mannheim.informatik.dws</groupId>
+			<groupId>de.dwslab</groupId>
 			<artifactId>dwslib</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
+			<version>2.0.0-SNAPSHOT</version>
+			</dependency>
 	</dependencies>
 	<name>DPEF</name>
 </project>

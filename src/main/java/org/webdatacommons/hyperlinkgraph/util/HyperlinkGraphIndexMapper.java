@@ -16,8 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import de.uni_mannheim.informatik.dws.dwslib.framework.Processor;
-import de.uni_mannheim.informatik.dws.dwslib.util.InputUtil;
+import de.dwslab.dwslib.framework.Processor;
+import de.dwslab.dwslib.util.io.InputUtil;
 
 /**
  * This class replaces a defined set of Strings with their IDs. First the ID

@@ -15,8 +15,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import de.uni_mannheim.informatik.dws.dwslib.framework.Processor;
-import de.uni_mannheim.informatik.dws.dwslib.util.InputUtil;
+import de.dwslab.dwslib.framework.Processor;
+import de.dwslab.dwslib.util.io.InputUtil;
 
 /**
  * This class cleans the web page links. Internal links (from page to the same

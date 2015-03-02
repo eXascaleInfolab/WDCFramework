@@ -42,6 +42,7 @@ import org.webdatacommons.framework.io.CSVExport;
 import org.webdatacommons.framework.processor.ProcessingNode;
 import org.webdatacommons.structureddata.extractor.RDFExtractor;
 import org.webdatacommons.structureddata.processor.WarcProcessor;
+import org.webdatacommons.structureddata.util.DataCollector;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
@@ -79,7 +80,7 @@ import com.martiansoftware.jsap.Switch;
 import com.martiansoftware.jsap.UnflaggedOption;
 import com.martiansoftware.jsap.UnspecifiedParameterException;
 
-import de.uni_mannheim.informatik.dws.dwslib.util.InputUtil;
+import de.dwslab.dwslib.util.io.InputUtil;
 
 public class Master extends ProcessingNode {
 
@@ -128,7 +129,7 @@ public class Master extends ProcessingNode {
 		@Override
 		public void run() {
 			try {
-				
+
 				log.info("Retrieving " + name + ", (" + i + "/" + length + ") ");
 
 				// data file
@@ -147,7 +148,7 @@ public class Master extends ProcessingNode {
 										dataObject.getDataInputStream())));
 					}
 					String line;
-					while (retrievedDataReader.ready()){
+					while (retrievedDataReader.ready()) {
 						line = retrievedDataReader.readLine();
 						Line l = parseLine(line);
 						if (l == null) {
@@ -174,7 +175,7 @@ public class Master extends ProcessingNode {
 
 	}
 
-	//TODO move this to de.dwslab.dwslib.framework.Processor
+	// TODO move this to de.dwslab.dwslib.framework.Processor
 	private class DataThreadHandler extends Thread implements Observer {
 		private File dataDir;
 		private int sizeLimitMb;
@@ -193,7 +194,7 @@ public class Master extends ProcessingNode {
 			this.dataDir = dataDir;
 			this.sizeLimitMb = sizeLimitMb;
 			this.localRawDataFolder = localRawDataFolder;
-			if (threadLimit > 0) {
+			if (threadLimit > -1) {
 				this.threadLimit = threadLimit;
 			} else {
 				this.threadLimit = Runtime.getRuntime().availableProcessors();
@@ -284,8 +285,8 @@ public class Master extends ProcessingNode {
 	}
 
 	public static class Line {
-		private String quad;
-		private String extractor;
+		public String quad;
+		public String extractor;
 	}
 
 	Map<String, OutputStream> outputWriters = new HashMap<String, OutputStream>();
@@ -1202,7 +1203,7 @@ public class Master extends ProcessingNode {
 	 */
 	public void retrieveData(File dataDir, String fileName, int sizeLimitMb,
 			int threads) {
-		Thread t = null;
+		
 		File file = null;
 		if (fileName != null && fileName.length() > 0) {
 			file = new File(fileName);
@@ -1212,13 +1213,20 @@ public class Master extends ProcessingNode {
 			}
 		}
 
-		t = new DataThreadHandler(dataDir, file, sizeLimitMb, threads);
+		if (file != null) {
+			DataCollector dc = new DataCollector(fileName,
+					dataDir.getAbsolutePath(), threads);
+			dc.process();
+		} else {
+			Thread t = null;
+			t = new DataThreadHandler(dataDir, file, sizeLimitMb, threads);
 
-		t.start();
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			t.start();
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}

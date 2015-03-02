@@ -301,6 +301,8 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			urlBW.close();
 			anchorBW.close();
 			pageStatHandler.flush();
+			// and the data stream
+			tempOutputStream.flush();
 
 			/**
 			 * write extraction results to s3, if at least one included item was

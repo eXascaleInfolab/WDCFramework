@@ -79,6 +79,8 @@ import com.martiansoftware.jsap.Switch;
 import com.martiansoftware.jsap.UnflaggedOption;
 import com.martiansoftware.jsap.UnspecifiedParameterException;
 
+import de.uni_mannheim.informatik.dws.dwslib.util.InputUtil;
+
 public class Master extends ProcessingNode {
 
 	/**
@@ -93,6 +95,8 @@ public class Master extends ProcessingNode {
 	 */
 	private class DataThread extends Observable implements Runnable {
 		private S3Object object;
+		private String name;
+		private File file;
 		private int i;
 		private File dataDir;
 		private int sizeLimitMb;
@@ -102,6 +106,18 @@ public class Master extends ProcessingNode {
 		private DataThread(S3Object object, int i, File dataDir,
 				int sizeLimitMb, int length, String resultBucket) {
 			this.object = object;
+			this.name = "s3 " + object.getKey();
+			this.i = i;
+			this.dataDir = dataDir;
+			this.sizeLimitMb = sizeLimitMb;
+			this.length = length;
+			this.resultBucket = resultBucket;
+		}
+
+		private DataThread(File object, int i, File dataDir, int sizeLimitMb,
+				int length, String resultBucket) {
+			this.file = object;
+			this.name = "local " + object.getName();
 			this.i = i;
 			this.dataDir = dataDir;
 			this.sizeLimitMb = sizeLimitMb;
@@ -112,46 +128,44 @@ public class Master extends ProcessingNode {
 		@Override
 		public void run() {
 			try {
-				log.info("Retrieving "
-						+ object.getKey()
-						+ ", ("
-						+ i
-						+ "/"
-						+ length
-						+ ") "
-						+ CSVExport.humanReadableByteCount(
-								object.getContentLength(), false));
-
-				// now really download the file
-				S3Object dataObject = getStorage().getObject(resultBucket,
-						object.getKey());
+				
+				log.info("Retrieving " + name + ", (" + i + "/" + length + ") ");
 
 				// data file
-				if (object.getKey().endsWith(".nq.gz")) {
+				if (name.endsWith(".nq.gz")) {
 
-					BufferedReader retrievedDataReader = new BufferedReader(
-							new InputStreamReader(new GZIPInputStream(
-									dataObject.getDataInputStream())));
+					BufferedReader retrievedDataReader = null;
+					if (file != null) {
+						retrievedDataReader = InputUtil.getBufferedReader(file);
+					} else {
+						// now really download the file
+						S3Object dataObject = getStorage().getObject(
+								resultBucket, object.getKey());
 
+						retrievedDataReader = new BufferedReader(
+								new InputStreamReader(new GZIPInputStream(
+										dataObject.getDataInputStream())));
+					}
 					String line;
-					while ((line = retrievedDataReader.readLine()) != null) {
+					while (retrievedDataReader.ready()){
+						line = retrievedDataReader.readLine();
 						Line l = parseLine(line);
 						if (l == null) {
 							continue;
 						}
 						if (!RDFExtractor.EXTRACTORS.contains(l.extractor)) {
-							log.warn(l.quad + "/" + l.extractor
+							log.debug(l.quad + "/" + l.extractor
 									+ " is strange...");
 							continue;
 						}
 						OutputStream out = getOutput(l.extractor, dataDir,
 								sizeLimitMb);
-						out.write(new String(l.quad + "\n").getBytes());
+						out.write(new String(l.quad + "\n").getBytes("UTF-8"));
 					}
 					retrievedDataReader.close();
 				}
 			} catch (Exception e) {
-				log.warn("Error in " + object.getKey(), e);
+				log.debug("Error in " + name, e);
 			} finally {
 				setChanged();
 				notifyObservers();
@@ -160,20 +174,25 @@ public class Master extends ProcessingNode {
 
 	}
 
+	//TODO move this to de.dwslab.dwslib.framework.Processor
 	private class DataThreadHandler extends Thread implements Observer {
 		private File dataDir;
 		private int sizeLimitMb;
 		private int threads = 0;
 		private int threadLimit = 1;
+		// if this is null, the S3 version is used
+		private File localRawDataFolder = null;
 
 		private DataThreadHandler(File dataDir, int sizeLimitMb) {
 			this.dataDir = dataDir;
 			this.sizeLimitMb = sizeLimitMb;
 		}
 
-		private DataThreadHandler(File dataDir, int sizeLimitMb, int threadLimit) {
+		private DataThreadHandler(File dataDir, File localRawDataFolder,
+				int sizeLimitMb, int threadLimit) {
 			this.dataDir = dataDir;
 			this.sizeLimitMb = sizeLimitMb;
+			this.localRawDataFolder = localRawDataFolder;
 			if (threadLimit > 0) {
 				this.threadLimit = threadLimit;
 			} else {
@@ -186,24 +205,49 @@ public class Master extends ProcessingNode {
 			dataDir.mkdirs();
 			String resultBucket = getOrCry("resultBucket");
 			try {
-				S3Object[] objects = getStorage().listObjects(resultBucket,
-						"data/", null);
-				int i = 0;
+				if (localRawDataFolder != null) {
 
-				for (S3Object object : objects) {
-					// check if there are already as many threads as cpu cores
-					while (threads > threadLimit) {
-						Thread.sleep(50);
+					File[] objects = localRawDataFolder.listFiles();
+					int i = 0;
+					for (File object : objects) {
+						// check if there are already as many threads as cpu
+						// cores
+						while (threads > threadLimit) {
+							Thread.sleep(50);
+						}
+						i++;
+						// create a thread that handles this object
+						DataThread dt = new DataThread(object, i, dataDir,
+								sizeLimitMb, objects.length, resultBucket);
+						dt.addObserver(this);
+						Thread t = new Thread(dt);
+
+						t.start();
+						threads++;
 					}
-					i++;
-					// create a thread that handles this object
-					DataThread dt = new DataThread(object, i, dataDir,
-							sizeLimitMb, objects.length, resultBucket);
-					dt.addObserver(this);
-					Thread t = new Thread(dt);
 
-					t.start();
-					threads++;
+				} else {
+
+					S3Object[] objects = getStorage().listObjects(resultBucket,
+							"data/", null);
+					int i = 0;
+
+					for (S3Object object : objects) {
+						// check if there are already as many threads as cpu
+						// cores
+						while (threads > threadLimit) {
+							Thread.sleep(50);
+						}
+						i++;
+						// create a thread that handles this object
+						DataThread dt = new DataThread(object, i, dataDir,
+								sizeLimitMb, objects.length, resultBucket);
+						dt.addObserver(this);
+						Thread t = new Thread(dt);
+
+						t.start();
+						threads++;
+					}
 				}
 
 				// wait till all threads are finished
@@ -261,12 +305,13 @@ public class Master extends ProcessingNode {
 			+ "\" \n java -Xmx"
 			+ getOrCry("javamemory").trim()
 			+ " -jar /tmp/start.jar > /tmp/start.log & \n";
-	
-//	private final String startupScript = "#!/bin/bash \n echo 1 > /proc/sys/vm/overcommit_memory \n aptitude update \n aptitude -y install java7-jdk htop \n wget -O /tmp/start.jar \""
-//			+ getJarUrl()
-//			+ "\" \n java -Xmx"
-//			+ getOrCry("javamemory").trim()
-//			+ " -jar /tmp/start.jar > /tmp/start.log & \n";
+
+	// private final String startupScript =
+	// "#!/bin/bash \n echo 1 > /proc/sys/vm/overcommit_memory \n aptitude update \n aptitude -y install java7-jdk htop \n wget -O /tmp/start.jar \""
+	// + getJarUrl()
+	// + "\" \n java -Xmx"
+	// + getOrCry("javamemory").trim()
+	// + " -jar /tmp/start.jar > /tmp/start.log & \n";
 
 	private static Logger log = Logger.getLogger(Master.class);
 
@@ -499,10 +544,16 @@ public class Master extends ProcessingNode {
 			destinationDir.setHelp("Directory to write the extracted data to");
 			jsap.registerParameter(destinationDir);
 
-			Switch multiThreadMode = new Switch("multiThreadMode").setLongFlag(
-					"multiThreadMode").setShortFlag('m');
-			multiThreadMode
-					.setHelp("Run data retrieve in multithread mode using thread number equal to available number of cores on the system.");
+			FlaggedOption localDestinationDir = new FlaggedOption("localsource")
+					.setStringParser(JSAP.STRING_PARSER).setRequired(false)
+					.setLongFlag("localsource").setShortFlag('l');
+			destinationDir.setHelp("Local Directory to retrieve data from.");
+			jsap.registerParameter(localDestinationDir);
+
+			FlaggedOption multiThreadMode = new FlaggedOption("multiThreadMode")
+					.setStringParser(JSAP.INTEGER_PARSER).setRequired(false)
+					.setLongFlag("multiThreadMode").setShortFlag('m');
+			destinationDir.setHelp("Number of threads to use in parallel.");
 			jsap.registerParameter(multiThreadMode);
 
 			JSAPResult destinationConfig = jsap.parse(args);
@@ -511,13 +562,27 @@ public class Master extends ProcessingNode {
 			}
 			File destinationDirectory = new File(
 					destinationConfig.getString("destination"));
-			boolean useMultiThread = destinationConfig
-					.getBoolean("multiThreadMode");
+			int threads = 0;
+			try {
+				threads = destinationConfig.getInt("multiThreadMode");
+				System.out.println("Running with " + threads + " Threads.");
+			} catch (NullPointerException e) {
+				System.out.println("Running in single thread mode.");
+			}
 
-			System.out
-					.println("Getting extracted triples from cloud to local disk...");
+			String localDir = null;
+			try {
+				localDir = destinationConfig.getString("localsource");
+				System.out
+						.println("Getting extracted triples from local dir to local disk...");
+			} catch (NullPointerException e) {
+				// nullpointer
+				System.out
+						.println("Getting extracted triples from cloud to local disk...");
+			}
+
 			Master m = new Master();
-			m.retrieveData(destinationDirectory, 100, useMultiThread);
+			m.retrieveData(destinationDirectory, localDir, 100, threads);
 
 			System.out.println("done.");
 			System.exit(0);
@@ -1135,15 +1200,19 @@ public class Master extends ProcessingNode {
 	 * @param sizeLimitMb
 	 * @param runInMultiThreadMode
 	 */
-	public void retrieveData(File dataDir, int sizeLimitMb,
-			boolean runInMultiThreadMode) {
+	public void retrieveData(File dataDir, String fileName, int sizeLimitMb,
+			int threads) {
 		Thread t = null;
-		if (runInMultiThreadMode) {
-			// run retrieve with multiple threads
-			t = new DataThreadHandler(dataDir, sizeLimitMb, 0);
-		} else {
-			t = new DataThreadHandler(dataDir, sizeLimitMb, 1);
+		File file = null;
+		if (fileName != null && fileName.length() > 0) {
+			file = new File(fileName);
+			if (!file.isDirectory()) {
+				System.out.println("Input file name is not a directory");
+				System.exit(0);
+			}
 		}
+
+		t = new DataThreadHandler(dataDir, file, sizeLimitMb, threads);
 
 		t.start();
 		try {

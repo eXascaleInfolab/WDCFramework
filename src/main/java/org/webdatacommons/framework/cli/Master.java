@@ -450,7 +450,18 @@ public class Master extends ProcessingNode {
 		}
 
 		if ("monitor".equals(action)) {
-			new Master().monitorQueue();
+
+			Switch autoShutdown = new Switch("autoShutdown").setLongFlag(
+					"autoShutdown").setShortFlag('a');
+			autoShutdown
+					.setHelp("Indicates if shutdown method is called if not messages are left to process and ec2 system is still running.");
+			jsap.registerParameter(autoShutdown);
+			JSAPResult queueResult = jsap.parse(args);
+			if (!queueResult.success()) {
+				printUsageAndExit(jsap, queueResult);
+			}
+			boolean auto = queueResult.getBoolean("autoShutdown");
+			new Master().monitorQueue(auto);
 			System.exit(0);
 		}
 
@@ -1002,9 +1013,10 @@ public class Master extends ProcessingNode {
 
 	}
 
-	public void monitorQueue() {
+	public void monitorQueue(boolean autoShutDown) {
 		System.out
-				.println("Monitoring job queue, extraction rate and running instances.");
+				.println("Monitoring job queue, extraction rate and running instances. AutoShutdown is: "
+						+ (autoShutDown ? "on" : "off"));
 		System.out.println();
 
 		List<DateSizeRecord> sizeLog = new ArrayList<DateSizeRecord>();
@@ -1012,6 +1024,10 @@ public class Master extends ProcessingNode {
 
 		AmazonEC2 ec2 = new AmazonEC2Client(getAwsCredentials());
 		ec2.setEndpoint(getOrCry("ec2endpoint"));
+
+		long emptyQueueTimerMS = 0;
+		long maxEmptyQueueTimeMS = 60000;
+		long sleepMS = 1000;
 
 		while (true) {
 			try {
@@ -1041,6 +1057,32 @@ public class Master extends ProcessingNode {
 						"ApproximateNumberOfMessages"));
 				Long inflightSize = Long.parseLong(res.getAttributes().get(
 						"ApproximateNumberOfMessagesNotVisible"));
+
+				// in case the queueSize and the inflightSize are 0 for a longer
+				// time, the ec2s are automatically shut down.
+				if (autoShutDown) {
+					if (requestedInstances + runningInstances > 0) {
+						if (queueSize + inflightSize > 0) {
+							emptyQueueTimerMS = 0;
+						} else {
+							emptyQueueTimerMS += sleepMS;
+						}
+
+						if (emptyQueueTimerMS > maxEmptyQueueTimeMS) {
+
+							System.out
+									.println(new Date() + " No more messages to process. Shutting down instances.");
+							shutdownInstances();
+							try {
+								// lets wait a little bit.
+								System.out.println("Waiting for shutdown.");
+								Thread.sleep(sleepMS * 10);
+							} catch (InterruptedException e) {
+								// who cares if we get interrupted here
+							}
+						}
+					}
+				}
 
 				// add the new value to the tail, now remove too old stuff from
 				// the
@@ -1088,7 +1130,7 @@ public class Master extends ProcessingNode {
 				System.out.print("\r! // ");
 			}
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(sleepMS);
 			} catch (InterruptedException e) {
 				// who cares if we get interrupted here
 			}
@@ -1203,7 +1245,7 @@ public class Master extends ProcessingNode {
 	 */
 	public void retrieveData(File dataDir, String fileName, int sizeLimitMb,
 			int threads) {
-		
+
 		File file = null;
 		if (fileName != null && fileName.length() > 0) {
 			file = new File(fileName);

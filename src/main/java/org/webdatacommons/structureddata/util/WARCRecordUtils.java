@@ -1,6 +1,11 @@
 package org.webdatacommons.structureddata.util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCRecord;

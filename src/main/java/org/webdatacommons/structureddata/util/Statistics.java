@@ -30,9 +30,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.any23.rdf.Prefixes;
 import org.apache.commons.collections15.map.LRUMap;
 import org.apache.log4j.Logger;
-import org.apache.any23.rdf.Prefixes;
 import org.webdatacommons.framework.io.CSVExport;
 import org.webdatacommons.framework.io.CSVReaderSingleLine;
 import org.webdatacommons.structureddata.extractor.RDFExtractor;

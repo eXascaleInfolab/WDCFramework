@@ -59,3 +59,13 @@ javamemory = 5G
 # WDC Extraction Framework Processor Specific Properties
 ## log regex failures (structured data extraction)
 logRegexFailures = false
+
+# WDC WebTables Specific Properties
+## extraction of top n terms
+extractTopNTerms = true
+## in case you want mh, use mh, otherwise basic is used
+extractionAlgorithm = org.webdatacommons.webtables.extraction.BasicExtraction
+## selected model for phase 1
+phase1ModelPath = /RandomForest_P1.mdl
+## selected model for phase 2
+phase2ModelPath = /RandomForest_P2.md

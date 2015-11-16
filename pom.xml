@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.webdatacommons</groupId>
 	<artifactId>dpef</artifactId>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.3</version>
 	<description>Distributed Parallel Extractor For Amazon Web Services</description>
 	<build>
 		<plugins>
@@ -88,31 +88,15 @@
 			<!-- END: Assembly Plugin -->
 
 			<!-- BEGIN: Install-file Plugin -->
-			<!-- 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.5.1</version>
-				<executions>
-					<execution>
-						<id>install-cclib</id>
-						<phase>pre-clean</phase>
-						<goals>
-							<goal>install-file</goal>
-						</goals>
-						<configuration>
-							<file>${basedir}/lib/commoncrawl-0.1.jar</file>
-							<groupId>commoncrawl</groupId>
-							<artifactId>commoncrawl</artifactId>
-							<version>0.1</version>
-							<packaging>jar</packaging>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>-->
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-install-plugin</artifactId> 
+				<version>2.5.1</version> <executions> <execution> <id>install-cclib</id> 
+				<phase>pre-clean</phase> <goals> <goal>install-file</goal> </goals> <configuration> 
+				<file>${basedir}/lib/commoncrawl-0.1.jar</file> <groupId>commoncrawl</groupId> 
+				<artifactId>commoncrawl</artifactId> <version>0.1</version> <packaging>jar</packaging> 
+				</configuration> </execution> </executions> </plugin> -->
 			<!-- END: Install-file Plugin -->
 		</plugins>
-	
+
 		<pluginManagement>
 			<plugins>
 				<!--This plugin's configuration is used to store Eclipse m2e settings 
@@ -214,14 +198,12 @@
 			<artifactId>gson</artifactId>
 			<version>2.2.4</version>
 		</dependency>
-
-		<!--cc stuff depends on hadoop -->
+		<!-- jsoup -->
 		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-			<version>0.20.2</version>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.7.3</version>
 		</dependency>
-
 		<!--AWS API -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
@@ -234,7 +216,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
+		<!-- WEKA -->
+		<dependency>
+			<groupId>nz.ac.waikato.cms.weka</groupId>
+			<artifactId>weka-stable</artifactId>
+			<version>3.6.11</version>
+		</dependency>
 		<!--JetS3T, used for S3 (nicer than AWS) -->
 		<dependency>
 			<groupId>net.java.dev.jets3t</groupId>
@@ -308,18 +295,34 @@
 			<version>13.0.1</version>
 		</dependency>
 
- 		<dependency>
-            <groupId>commoncrawl</groupId>
-            <artifactId>commoncrawl</artifactId>
-            <version>0.1</version>
-        </dependency>
+		<dependency>
+			<groupId>commoncrawl</groupId>
+			<artifactId>commoncrawl</artifactId>
+			<version>0.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.archive.heritrix</groupId>
 			<artifactId>heritrix-commons</artifactId>
 			<version>3.1.0</version>
 		</dependency>
-<!--  pig library -->
+		<!-- JWAT -->
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-common</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-gzip</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-warc</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<!-- pig library -->
 		<dependency>
 			<groupId>org.apache.pig</groupId>
 			<artifactId>pig</artifactId>
@@ -329,7 +332,38 @@
 			<groupId>de.dwslab</groupId>
 			<artifactId>dwslib</artifactId>
 			<version>2.0.0-SNAPSHOT</version>
-			</dependency>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>4.10.2</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>4.10.2</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.leveldbjni</groupId>
+			<artifactId>leveldbjni-all</artifactId>
+			<version>1.8</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-client</artifactId>
+			<version>2.5.2</version>
+			<optional>true</optional>
+		</dependency>
+		<!--cc stuff depends on hadoop -->
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-core</artifactId>
+			<version>0.20.2</version>
+		</dependency>
 	</dependencies>
 	<name>DPEF</name>
 </project>

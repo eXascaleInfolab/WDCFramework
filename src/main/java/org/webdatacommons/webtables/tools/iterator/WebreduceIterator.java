@@ -20,6 +20,15 @@ import com.google.common.io.LineReader;
 /* Most interesting subclass of ParallelItereator, subclass this to create custom iterators that work 
  * with the DWTC dataset.
  */
+
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public abstract class WebreduceIterator extends ParallelIterator {
 
 	@Override

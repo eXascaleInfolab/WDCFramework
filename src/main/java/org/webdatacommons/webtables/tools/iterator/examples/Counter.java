@@ -7,6 +7,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.webdatacommons.webtables.tools.iterator.WebreduceIterator;
 
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class Counter extends WebreduceIterator {
 
 	public static AtomicLong result = new AtomicLong();

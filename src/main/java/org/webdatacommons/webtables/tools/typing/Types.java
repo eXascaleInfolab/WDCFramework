@@ -12,6 +12,15 @@ import java.util.regex.Pattern;
 import com.google.common.collect.Lists;
 
 /* Heuristics for typing table columns (e.g. recognizing numeric columns) */
+
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class Types {
 
 	static double TYPE_MAJORITY_THRESHOLD = 0.40;

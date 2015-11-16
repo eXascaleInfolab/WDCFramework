@@ -5,6 +5,15 @@ package org.webdatacommons.webtables.extraction.model;
  * (multiclass classification for non-layout tables)
  */
 
+/**
+ * 
+ * 
+ * The code was mainly copied from the DWT framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jsoup.nodes.Element;
-
 import org.webdatacommons.webtables.extraction.stats.TableStats;
 import org.webdatacommons.webtables.extraction.util.CellTools;
 import org.webdatacommons.webtables.extraction.util.Tools;
@@ -594,6 +602,7 @@ public class FeaturesP2 {
 			featureName = "CUMULATIVE_CONTENT_CONSISTENCY";
 		}
 
+		@SuppressWarnings("unchecked")
 		public void initialize(TableStats stats) {
 
 			// typesOfRow is a temporary array, recreated for each row, that

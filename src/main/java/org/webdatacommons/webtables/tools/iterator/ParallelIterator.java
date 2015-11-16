@@ -8,6 +8,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /* Abstract base class for that enabled parallel iteration over a set of files */
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public abstract class ParallelIterator {
 
 	protected ExecutorService executorService;

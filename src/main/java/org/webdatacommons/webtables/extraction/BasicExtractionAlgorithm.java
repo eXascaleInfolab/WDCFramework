@@ -42,6 +42,14 @@ import com.google.common.collect.Multisets;
  * page.
  *
  */
+/**
+ * 
+ * 
+ * The code was mainly copied from the DWT framework (https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class BasicExtractionAlgorithm implements ExtractionAlgorithm {
 
 	protected static final int TABLE_MIN_COLS = 2;

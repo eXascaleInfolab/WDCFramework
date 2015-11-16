@@ -7,7 +7,14 @@ import java.nio.charset.Charset;
 
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
-
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class Dataset implements Serializable {
 
 	private static final long serialVersionUID = -3847270241520985456L;

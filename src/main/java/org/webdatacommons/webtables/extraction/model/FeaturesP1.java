@@ -5,6 +5,16 @@ package org.webdatacommons.webtables.extraction.model;
  * (binary classification between layout and non-layout tables)
  */
 
+/**
+ * 
+ * 
+ * The code was mainly copied from the DWT framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

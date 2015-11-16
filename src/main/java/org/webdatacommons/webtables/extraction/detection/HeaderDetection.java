@@ -7,7 +7,15 @@ import java.util.regex.Pattern;
 import org.webdatacommons.webtables.extraction.stats.TableStats;
 
 //header detection for horizontal tables only. if there is vertical table convert it to horizontal and then apply this heuristic. otherwise results will be miss leading
-
+/**
+ * 
+ * 
+ * The code was mainly copied from the DWT framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class HeaderDetection {
 	
 	private TableStats myTableStats;

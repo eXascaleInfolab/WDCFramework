@@ -28,6 +28,15 @@ import com.google.common.base.Optional;
  * page.
  *
  */
+/**
+ * 
+ * 
+ * The code was mainly copied from the DWT framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class MHExtractionAlgorithm extends BasicExtractionAlgorithm {
 
 	protected static final int TABLE_MIN_ROWS = 2;

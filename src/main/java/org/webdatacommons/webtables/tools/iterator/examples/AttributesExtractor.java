@@ -11,6 +11,15 @@ import org.webdatacommons.webtables.tools.data.Dataset;
 import org.webdatacommons.webtables.tools.iterator.WebreduceIterator;
 
 /* extracts the "schema" of all tables in the corpus, assuming the "schema" is in the first line */
+
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class AttributesExtractor extends WebreduceIterator {
 
 	public static List<String> result = Collections

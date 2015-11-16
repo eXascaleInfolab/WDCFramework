@@ -13,6 +13,15 @@ import org.webdatacommons.webtables.tools.iterator.WebreduceIterator;
 /* Another example iterator: this one selects only wide tables (more than
  * 8 attributes) from the corpus and writes a new corpus containing only them. 
  */
+
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class WideTableExtractor extends WebreduceIterator {
 
 	public List<Dataset> list = Collections

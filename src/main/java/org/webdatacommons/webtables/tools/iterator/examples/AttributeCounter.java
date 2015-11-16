@@ -10,6 +10,15 @@ import org.webdatacommons.webtables.tools.iterator.FileLinesIterator;
 
 /* counts unique attributes in the corpus from the extracted first lines of all tables as produced 
  * by the class AttributesExtractor */
+
+/**
+ * 
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class AttributeCounter extends FileLinesIterator {
 
 	static ConcurrentMap<String, AtomicLong> stats = new ConcurrentHashMap<String, AtomicLong>();

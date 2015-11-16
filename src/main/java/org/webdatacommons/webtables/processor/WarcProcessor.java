@@ -17,19 +17,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.model.S3Object;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
 import org.webdatacommons.framework.processor.FileProcessor;
 import org.webdatacommons.framework.processor.ProcessingNode;
-import org.webdatacommons.webtables.extraction.BasicExtractionAlgorithm;
 import org.webdatacommons.webtables.extraction.ExtractionAlgorithm;
 import org.webdatacommons.webtables.extraction.TableClassification;
 import org.webdatacommons.webtables.extraction.model.DocumentMetadata;
@@ -38,7 +36,15 @@ import org.webdatacommons.webtables.extraction.stats.StatsKeeper;
 import org.webdatacommons.webtables.tools.data.Dataset;
 
 import de.dwslab.dwslib.util.io.OutputUtil;
-
+/**
+ * 
+ * Processor to extract web tables from .warc files.
+ * The code was mainly copied from the DWTC framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class WarcProcessor extends ProcessingNode implements FileProcessor {
 
 	private static Logger log = Logger.getLogger(WarcProcessor.class);
@@ -67,6 +73,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 		TableClassification tc = new TableClassification(
 				getOrCry("phase1ModelPath"), getOrCry("phase2ModelPath"));
 
+		@SuppressWarnings("rawtypes")
 		Constructor c = Class.forName(getOrCry("extractionAlgorithm"))
 				.getConstructor(StatsKeeper.class, Boolean.TYPE,
 						TableClassification.class);

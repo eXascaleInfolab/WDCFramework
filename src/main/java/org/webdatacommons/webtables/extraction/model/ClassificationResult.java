@@ -3,7 +3,15 @@ import java.util.Arrays;
 
 import org.webdatacommons.webtables.tools.data.TableType;
 
-
+/**
+ * 
+ * 
+ * The code was mainly copied from the DWT framework 
+ * (https://github.com/JulianEberius/dwtc-extractor & https://github.com/JulianEberius/dwtc-tools)
+ * 
+ * @author Robert Meusel (robert@informatik.uni-mannheim.de) - Translation to DPEF
+ *
+ */
 public class ClassificationResult {
 	private TableType resultType;
 	private double[] distribution1, distribution2;

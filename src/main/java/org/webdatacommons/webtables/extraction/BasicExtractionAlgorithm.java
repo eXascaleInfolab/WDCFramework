@@ -106,7 +106,7 @@ public class BasicExtractionAlgorithm implements ExtractionAlgorithm {
 	}
 
 	public BasicExtractionAlgorithm(StatsKeeper stats, boolean th_extract_terms) {
-		new BasicExtractionAlgorithm(stats, th_extract_terms, null);
+		this(stats, th_extract_terms, null);
 	}
 
 	/*
@@ -832,7 +832,7 @@ public class BasicExtractionAlgorithm implements ExtractionAlgorithm {
 	public static void main(String[] args) throws MalformedURLException,
 			IOException, InterruptedException {
 		ExtractionAlgorithm ea = new BasicExtractionAlgorithm(
-				new HashMapStatsData(), true);
+				new HashMapStatsData(), true, null);
 
 		for (String url : new String[] { "https://en.wikipedia.org/wiki/List_of_countries_by_population",
 		// "https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(nominal)",

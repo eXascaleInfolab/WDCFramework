@@ -1,23 +1,10 @@
 package org.webdatacommons.structureddata.processor;
 
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.oracle.javafx.jmx.json.JSONFactory;
+import com.martiansoftware.jsap.JSAP;
+import com.martiansoftware.jsap.JSAPResult;
+import com.martiansoftware.jsap.UnflaggedOption;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
@@ -34,9 +21,15 @@ import org.webdatacommons.structureddata.extractor.RDFExtractor;
 import org.webdatacommons.structureddata.extractor.RDFExtractor.ExtractorResult;
 import org.webdatacommons.structureddata.util.WARCRecordUtils;
 
-import com.martiansoftware.jsap.JSAP;
-import com.martiansoftware.jsap.JSAPResult;
-import com.martiansoftware.jsap.UnflaggedOption;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Uses the {@link org.archive.io.ArchiveReaderFactory} from the UKWA codebase
@@ -111,9 +104,9 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 							"UTF-8"));
 
 			// to store pages containing anchors
-			File tempOutputPageFile = File.createTempFile(
+			File tempOutputAnchorPagesFile = File.createTempFile(
 					"dpef-anchor-pages", ".nq.gz");
-			tempOutputPageFile.deleteOnExit();
+			tempOutputAnchorPagesFile.deleteOnExit();
 			BufferedWriter pageBW = new BufferedWriter(
 					new OutputStreamWriter(new GZIPOutputStream(
 							new FileOutputStream(tempOutputAnchorFile)),
@@ -377,6 +370,12 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 				dataFileObject.setKey(outputAnchorKey);
 				getStorage()
 						.putObject(getOrCry("resultBucket"), dataFileObject);
+
+				// Also store the pages
+				S3Object dfo =  new S3Object(tempOutputAnchorPagesFile);
+				dfo.setKey(outputAnchorPagesKey);
+				getStorage()
+						.putObject(getOrCry("resultBucket"), dfo);
 			}
 
 			if (feedTotal > 0) {

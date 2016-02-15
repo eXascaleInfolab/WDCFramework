@@ -301,7 +301,7 @@ public class Master extends ProcessingNode {
 	 * "Ubuntu 11.10 Oneiric instance-store" from www.alestic.com see
 	 * http://alestic.com/2009/06/ec2-user-data-scripts
 	 * */
-	private final String startupScript = "#!/bin/bash \n echo 1 > /proc/sys/vm/overcommit_memory \n aptitude update \n aptitude -y install openjdk-7-jre-headless htop \n wget -O /tmp/start.jar \""
+	private final String startupScript = "#!/bin/bash \n echo 1 > /proc/sys/vm/overcommit_memory \n wget -O /tmp/start.jar \""
 			+ getJarUrl()
 			+ "\" \n java -Xmx"
 			+ getOrCry("javamemory").trim()
@@ -835,7 +835,7 @@ public class Master extends ProcessingNode {
 		log.info("Requesting " + count + " instances of type "
 				+ getOrCry("ec2instancetype") + " with price limit of "
 				+ priceLimitDollars + " US$");
-		log.debug(startupScript);
+		log.info(startupScript);
 
 		try {
 			// our bid

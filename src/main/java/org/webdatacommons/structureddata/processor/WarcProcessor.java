@@ -1,15 +1,9 @@
 package org.webdatacommons.structureddata.processor;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
@@ -21,6 +15,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.oracle.javafx.jmx.json.JSONFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
@@ -64,6 +61,10 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			.compile(
 					"(<link[^>]*(?:\\s(?:type=[\\\"']?(application\\/rss\\+xml|application\\/atom\\+xml|application\\/rss|application\\/atom|application\\/rdf\\+xml|application\\/rdf|text\\/rss\\+xml|text\\/atom\\+xml|text\\/rss|text\\/atom|text\\/rdf\\+xml|text\\/rdf|text\\/xml|application\\/xml)[\\\"']?|rel=[\\\"']?(?:alternate)[\\\"']?))[^>]*>)",
 					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
+	// To store pages in json format
+	JsonFactory jsonFactory = new JsonFactory();
+
 
 	@Override
 	public Map<String, String> process(ReadableByteChannel fileChannel,
@@ -109,6 +110,15 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 							new FileOutputStream(tempOutputFeedFile)),
 							"UTF-8"));
 
+			// to store pages containing anchors
+			File tempOutputPageFile = File.createTempFile(
+					"dpef-anchor-pages", ".nq.gz");
+			tempOutputPageFile.deleteOnExit();
+			BufferedWriter pageBW = new BufferedWriter(
+					new OutputStreamWriter(new GZIPOutputStream(
+							new FileOutputStream(tempOutputAnchorFile)),
+							"UTF-8"));
+
 			// set name for data output
 			String outputFileKey = "data/ex_" + inputFileKey.replace("/", "_")
 					+ ".nq.gz";
@@ -123,6 +133,9 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 					+ inputFileKey.replace("/", "_") + ".csv.gz";
 			// set name for feed output
 			String outputFeedKey = "feed/ex_"
+					+ inputFileKey.replace("/", "_") + ".csv.gz";
+			// set name for page output
+			String outputAnchorPagesKey = "anchor_pages/ex_"
 					+ inputFileKey.replace("/", "_") + ".csv.gz";
 
 			// default is false
@@ -240,6 +253,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 										.matcher(docCont);
 								// ArrayList<String> links = new
 								// ArrayList<String>();
+								Boolean anchorFound = false;
 								while (pageMatcher.find()) {
 									// if
 									// (pageMatcher.group(1).contains("wikipedia."))
@@ -253,8 +267,12 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 											+ pageMatcher.group(1) + "\n");
 									anchorTotal++;
 									// }
+									anchorFound = true;
 								}
 								// TODO remember to write the file in the end
+								if(anchorFound) {
+									storePage(""+uri.toURL(), docCont, pageBW);
+								}
 							}
 						}
 
@@ -394,6 +412,19 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			throw new Exception(e.fillInStackTrace());
 		}
 	}
+
+	private void storePage(String url, String docCont, BufferedWriter pageBW) throws IOException {
+		StringWriter x = new StringWriter();
+		JsonGenerator g = jsonFactory.createGenerator(x);
+		g.writeStartObject();
+		g.writeStringField("url", url);
+		g.writeStringField("content", docCont);
+		g.writeEndObject();
+		g.close();
+		pageBW.write(x.toString());
+		pageBW.write("\n");
+//		pageBW.flush();
+	}//storePage
 
 	public static final String PAGES_GUESSED_TRIPLES = "pagesGuessedTriples";
 	public static final String PAGES_TRIPLES = "pagesTriples";

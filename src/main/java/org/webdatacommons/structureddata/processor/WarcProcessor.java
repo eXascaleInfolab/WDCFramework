@@ -59,6 +59,10 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			.compile(
 					"<a[^>]+href=[\\\"']?([^\\\"']+wikipedia[^\\\"']+)[\"']?[^>]*>(.+?)</a>",
 					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	Pattern feedPattern = Pattern
+			.compile(
+					"(<link[^>]*(?:\\s(?:type=[\"']?(?:application\\/rss\\+xml|application\\/atom\\+xml|application\\/rss|application\\/atom|application\\/rdf\\+xml|application\\/rdf|text\\/rss\\+xml|text\\/atom\\+xml|text\\/rss|text\\/atom|text\\/rdf\\+xml|text\\/rdf|text\\/xml|application\\/xml)[\"']?|rel=[\"']?(?:alternate)[\"']?))[^>]*>)",
+					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 	@Override
 	public Map<String, String> process(ReadableByteChannel fileChannel,
@@ -79,6 +83,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			File tempOutputUrlFile = File.createTempFile("dpef-url-extraction",
 					".nq.gz");
 			tempOutputFile.deleteOnExit();
+			// @TODO: is this correct? shouldn't it be tempOutputUrlFile.deleteOnExit()
 
 			BufferedWriter urlBW = new BufferedWriter(new OutputStreamWriter(
 					new GZIPOutputStream(
@@ -88,10 +93,22 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			File tempOutputAnchorFile = File.createTempFile(
 					"dpef-anchor-extraction", ".nq.gz");
 			tempOutputFile.deleteOnExit();
+			// @TODO: is this correct? shouldn't it be tempOutputAnchorFile.deleteOnExit()
 
 			BufferedWriter anchorBW = new BufferedWriter(
 					new OutputStreamWriter(new GZIPOutputStream(
 							new FileOutputStream(tempOutputAnchorFile)),
+							"UTF-8"));
+
+			// create file and stream for feed.
+			File tempOutputFeedFile = File.createTempFile(
+					"dpef-feed-extraction", ".nq.gz");
+			tempOutputFile.deleteOnExit();
+			// @TODO: is this correct? shouldn't it be tempOutputFeedFile.deleteOnExit()
+
+			BufferedWriter feedBW = new BufferedWriter(
+					new OutputStreamWriter(new GZIPOutputStream(
+							new FileOutputStream(tempOutputFeedFile)),
 							"UTF-8"));
 
 			// set name for data output
@@ -105,6 +122,9 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 					+ ".csv.gz";
 			// set name for anchor output
 			String outputAnchorKey = "anchor/ex_"
+					+ inputFileKey.replace("/", "_") + ".csv.gz";
+			// set name for feed output
+			String outputFeedKey = "feed/ex_"
 					+ inputFileKey.replace("/", "_") + ".csv.gz";
 
 			// default is false
@@ -132,6 +152,8 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			long pagesTriples = 0;
 			// number of anchors included in the pages
 			long anchorTotal = 0;
+			// number of feeds included in the pages
+			long feedTotal = 0;
 			// current time of the system when starting process.
 			long start = System.currentTimeMillis();
 
@@ -240,6 +262,12 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 							}
 						}
 
+						Matcher feedMatcher = feedPattern.matcher(docCont);
+						while (feedMatcher.find()) {
+							feedBW.write(uri.toURL() + "\t" + feedMatcher.group(1) + "\n");
+							feedTotal++;
+						}
+
 						ExtractorResult result = extractor.extract(item);
 
 						// if we had an error, increment error count
@@ -300,6 +328,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			// we close the stream
 			urlBW.close();
 			anchorBW.close();
+			feedBW.close();
 			pageStatHandler.flush();
 			// and the data stream
 			tempOutputStream.flush();
@@ -336,10 +365,18 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 						.putObject(getOrCry("resultBucket"), dataFileObject);
 			}
 
+			if (feedTotal > 0) {
+				S3Object dataFileObject = new S3Object(tempOutputFeedFile);
+				dataFileObject.setKey(outputFeedKey);
+				getStorage()
+						.putObject(getOrCry("resultBucket"), dataFileObject);
+			}
+
 			double duration = (System.currentTimeMillis() - start) / 1000.0;
 			double rate = (pagesTotal * 1.0) / duration;
 
 			// create data file statistics and return
+			// @TODO: should we include anchor and feed to statisticts?
 			Map<String, String> dataStats = new HashMap<String, String>();
 			dataStats.put("duration", Double.toString(duration));
 			dataStats.put("rate", Double.toString(rate));

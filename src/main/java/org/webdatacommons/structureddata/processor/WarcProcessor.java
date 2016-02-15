@@ -336,6 +336,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			urlBW.close();
 			anchorBW.close();
 			feedBW.close();
+			pageBW.close();
 			pageStatHandler.flush();
 			// and the data stream
 			tempOutputStream.flush();

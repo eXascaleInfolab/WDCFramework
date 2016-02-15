@@ -322,15 +322,15 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 									bwriter.write("\n\n\n#########################\n\n\n");
 								}
 							}
-							
+
 							// write statistics about pages without errors but not necessary with triples
 							pageStatHandler.addStats(item.getUri(), stats);
-							pagesGuessedTriples++;							
+							pagesGuessedTriples++;
 						}
 					}
 					pagesTotal++;
 				}
-			}
+			}//while has next
 			if (logRegexError) {
 				bwriter.flush();
 				try {

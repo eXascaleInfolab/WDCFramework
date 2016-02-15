@@ -62,7 +62,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 	// FIXME remove this if you do not want to get the feeds
 	Pattern feedPattern = Pattern
 			.compile(
-					"(<link[^>]*(?:\\s(?:type=[\"']?(?:application\\/rss\\+xml|application\\/atom\\+xml|application\\/rss|application\\/atom|application\\/rdf\\+xml|application\\/rdf|text\\/rss\\+xml|text\\/atom\\+xml|text\\/rss|text\\/atom|text\\/rdf\\+xml|text\\/rdf|text\\/xml|application\\/xml)[\"']?|rel=[\"']?(?:alternate)[\"']?))[^>]*>)",
+					"(<link[^>]*(?:\\s(?:type=[\\\"']?(application\\/rss\\+xml|application\\/atom\\+xml|application\\/rss|application\\/atom|application\\/rdf\\+xml|application\\/rdf|text\\/rss\\+xml|text\\/atom\\+xml|text\\/rss|text\\/atom|text\\/rdf\\+xml|text\\/rdf|text\\/xml|application\\/xml)[\\\"']?|rel=[\\\"']?(?:alternate)[\\\"']?))[^>]*>)",
 					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 	@Override
@@ -260,7 +260,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 
 						Matcher feedMatcher = feedPattern.matcher(docCont);
 						while (feedMatcher.find()) {
-							feedBW.write(uri.toURL() + "\t" + feedMatcher.group(1) + "\n");
+							feedBW.write(uri.toURL() + "\t" + feedMatcher.group(1) + "\t" + feedMatcher.group(2) + "\n");
 							feedTotal++;
 						}
 

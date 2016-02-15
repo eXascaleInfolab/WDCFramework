@@ -59,6 +59,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			.compile(
 					"<a[^>]+href=[\\\"']?([^\\\"']+wikipedia[^\\\"']+)[\"']?[^>]*>(.+?)</a>",
 					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	// FIXME remove this if you do not want to get the feeds
 	Pattern feedPattern = Pattern
 			.compile(
 					"(<link[^>]*(?:\\s(?:type=[\"']?(?:application\\/rss\\+xml|application\\/atom\\+xml|application\\/rss|application\\/atom|application\\/rdf\\+xml|application\\/rdf|text\\/rss\\+xml|text\\/atom\\+xml|text\\/rss|text\\/atom|text\\/rdf\\+xml|text\\/rdf|text\\/xml|application\\/xml)[\"']?|rel=[\"']?(?:alternate)[\"']?))[^>]*>)",
@@ -82,8 +83,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			// create file and stream for URLs.
 			File tempOutputUrlFile = File.createTempFile("dpef-url-extraction",
 					".nq.gz");
-			tempOutputFile.deleteOnExit();
-			// @TODO: is this correct? shouldn't it be tempOutputUrlFile.deleteOnExit()
+			tempOutputUrlFile.deleteOnExit();
 
 			BufferedWriter urlBW = new BufferedWriter(new OutputStreamWriter(
 					new GZIPOutputStream(
@@ -92,8 +92,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			// create file and stream for anchor.
 			File tempOutputAnchorFile = File.createTempFile(
 					"dpef-anchor-extraction", ".nq.gz");
-			tempOutputFile.deleteOnExit();
-			// @TODO: is this correct? shouldn't it be tempOutputAnchorFile.deleteOnExit()
+			tempOutputAnchorFile.deleteOnExit();
 
 			BufferedWriter anchorBW = new BufferedWriter(
 					new OutputStreamWriter(new GZIPOutputStream(
@@ -103,8 +102,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			// create file and stream for feed.
 			File tempOutputFeedFile = File.createTempFile(
 					"dpef-feed-extraction", ".nq.gz");
-			tempOutputFile.deleteOnExit();
-			// @TODO: is this correct? shouldn't it be tempOutputFeedFile.deleteOnExit()
+			tempOutputFeedFile.deleteOnExit();
 
 			BufferedWriter feedBW = new BufferedWriter(
 					new OutputStreamWriter(new GZIPOutputStream(
@@ -229,9 +227,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 						// do extraction (woo ho)
 						pagesParsed++;
 
-						// FIXME we can remove this if we do not want the
-						// anchors to
-						// be written
+						// FIXME we can remove this if we do not want the anchors to be written
 						String docCont = item.getContent().toString("UTF-8");
 						// we only write anchors from not wikipedia pages
 						if (!uri.toString().contains("wikipedia")) {
@@ -376,7 +372,6 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			double rate = (pagesTotal * 1.0) / duration;
 
 			// create data file statistics and return
-			// @TODO: should we include anchor and feed to statisticts?
 			Map<String, String> dataStats = new HashMap<String, String>();
 			dataStats.put("duration", Double.toString(duration));
 			dataStats.put("rate", Double.toString(rate));

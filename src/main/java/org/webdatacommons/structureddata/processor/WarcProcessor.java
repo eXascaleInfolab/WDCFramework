@@ -66,8 +66,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 		try {
 
 			// create a tmp file to write the output for the triples to
-			File tempOutputFile = File.createTempFile("dpef-triple-extraction",
-					".nq.gz");
+			File tempOutputFile = File.createTempFile("dpef-triple-extraction", ".nq.gz");
 			tempOutputFile.deleteOnExit();
 
 			OutputStream tempOutputStream = new GZIPOutputStream(
@@ -75,42 +74,37 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			RDFExtractor extractor = new RDFExtractor(tempOutputStream);
 
 			// create file and stream for URLs.
-			File tempOutputUrlFile = File.createTempFile("dpef-url-extraction",
-					".nq.gz");
+			File tempOutputUrlFile = File.createTempFile("dpef-url-extraction", ".nq.gz");
 			tempOutputUrlFile.deleteOnExit();
 
-			BufferedWriter urlBW = new BufferedWriter(new OutputStreamWriter(
-					new GZIPOutputStream(
-							new FileOutputStream(tempOutputUrlFile)), "UTF-8"));
+			OutputStreamWriter urlOS = new OutputStreamWriter(new GZIPOutputStream(
+							new FileOutputStream(tempOutputUrlFile)), "UTF-8");
+			BufferedWriter urlBW = new BufferedWriter(urlOS);
 
 			// create file and stream for anchor.
-			File tempOutputAnchorFile = File.createTempFile(
-					"dpef-anchor-extraction", ".nq.gz");
+			File tempOutputAnchorFile = File.createTempFile("dpef-anchor-extraction", ".nq.gz");
 			tempOutputAnchorFile.deleteOnExit();
 
-			BufferedWriter anchorBW = new BufferedWriter(
-					new OutputStreamWriter(new GZIPOutputStream(
-							new FileOutputStream(tempOutputAnchorFile)),
-							"UTF-8"));
+			OutputStreamWriter anchorOS = new OutputStreamWriter(new GZIPOutputStream(
+					new FileOutputStream(tempOutputAnchorFile)), "UTF-8");
+			BufferedWriter anchorBW = new BufferedWriter(anchorOS);
 
 			// create file and stream for feed.
 			File tempOutputFeedFile = File.createTempFile(
 					"dpef-feed-extraction", ".nq.gz");
 			tempOutputFeedFile.deleteOnExit();
 
-			BufferedWriter feedBW = new BufferedWriter(
-					new OutputStreamWriter(new GZIPOutputStream(
-							new FileOutputStream(tempOutputFeedFile)),
-							"UTF-8"));
+			OutputStreamWriter feedOS = new OutputStreamWriter(new GZIPOutputStream(
+					new FileOutputStream(tempOutputFeedFile)), "UTF-8");
+			BufferedWriter feedBW = new BufferedWriter(feedOS);
 
 			// to store pages containing anchors
-			File tempOutputAnchorPagesFile = File.createTempFile(
-					"dpef-anchor-pages", ".nq.gz");
+			File tempOutputAnchorPagesFile = File.createTempFile("dpef-anchor-pages", ".nq.gz");
 			tempOutputAnchorPagesFile.deleteOnExit();
-			BufferedWriter pageBW = new BufferedWriter(
-					new OutputStreamWriter(new GZIPOutputStream(
-							new FileOutputStream(tempOutputAnchorPagesFile)),
-							"UTF-8"));
+
+			OutputStreamWriter pageOS = new OutputStreamWriter(new GZIPOutputStream(
+					new FileOutputStream(tempOutputAnchorPagesFile)), "UTF-8");
+			BufferedWriter pageBW = new BufferedWriter(pageOS);
 
 			// set name for data output
 			String outputFileKey = "data/ex_" + inputFileKey.replace("/", "_")
@@ -333,13 +327,18 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 				}
 			}
 			// we close the stream
+			urlOS.flush();
 			urlBW.close();
+			anchorOS.flush();
 			anchorBW.close();
+			feedOS.flush();
 			feedBW.close();
+			pageOS.flush();
 			pageBW.close();
+
 			pageStatHandler.flush();
 			// and the data stream
-			tempOutputStream.flush();
+			tempOutputStream.close(); //TODO: changed here
 
 			/**
 			 * write extraction results to s3, if at least one included item was

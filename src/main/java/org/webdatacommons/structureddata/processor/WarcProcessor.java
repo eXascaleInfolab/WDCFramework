@@ -241,7 +241,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 									// {
 									anchorBW.write(uri.toURL()
 											+ "\t"
-											+ pageMatcher.group(2)
+											+ pageMatcher.group(4)
 													.replace("\n", " ")
 													.replace("\r", " ")
 													.replace("\t", " ") + "\t"

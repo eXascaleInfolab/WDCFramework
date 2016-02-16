@@ -109,7 +109,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			tempOutputAnchorPagesFile.deleteOnExit();
 			BufferedWriter pageBW = new BufferedWriter(
 					new OutputStreamWriter(new GZIPOutputStream(
-							new FileOutputStream(tempOutputAnchorFile)),
+							new FileOutputStream(tempOutputAnchorPagesFile)),
 							"UTF-8"));
 
 			// set name for data output
@@ -129,7 +129,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 					+ inputFileKey.replace("/", "_") + ".csv.gz";
 			// set name for page output
 			String outputAnchorPagesKey = "anchor_pages/ex_"
-					+ inputFileKey.replace("/", "_") + ".csv.gz";
+					+ inputFileKey.replace("/", "_") + ".json.gz";
 
 			// default is false
 			boolean logRegexError = Boolean

@@ -47,7 +47,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 	// FIXME remove this if you do not want to get the links
 	Pattern linkPattern = Pattern
 			.compile(
-					"<a[^>]+href=[\\\"']?([^\\\"']+wikipedia[^\\\"']+)[\"']?[^>]*>(.+?)</a>",
+					"<a[^>]* href=[\\\"']?([^\\\"'>]{0,20}(\\.m.)?wikipedia\\.[^\\\"'>]{0,5}\\/w(iki){0,1}\\/[^\\\"'>]+)[\"']?[^>]*>(.+?)<\\/a>",
 					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 	// FIXME remove this if you do not want to get the feeds
 	Pattern feedPattern = Pattern

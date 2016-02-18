@@ -130,7 +130,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 			final ArchiveReader reader = ArchiveReaderFactory.get(inputFileKey,
 					Channels.newInputStream(fileChannel), true);
 
-			log.info("Extracting data from " + inputFileKey + " ...");
+			log.info(Thread.currentThread().getName() + ": Extracting data from " + inputFileKey + " ...");
 
 			// number of pages visited for extraction
 			long pagesTotal = 0;
@@ -175,7 +175,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 					continue;
 				}
 				if (pagesTotal % 1000 == 0) {
-					log.info(pagesTotal + " / " + pagesParsed + " / "
+					log.info(Thread.currentThread().getName() + ": " + pagesTotal + " / " + pagesParsed + " / "
 							+ pagesTriples + " / " + pagesErrors);
 				}
 

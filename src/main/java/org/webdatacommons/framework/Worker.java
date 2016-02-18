@@ -86,7 +86,7 @@ public class Worker extends ProcessingNode {
 				timer.schedule(new TimerTask() {
 					@Override
 					public void run() {
-						log.warn("Killing worker thread, timeout expired.");
+						log.warn("Killing worker thread '" + t.getName() + "' , timeout expired.");
 						t.interrupt();
 					}
 				}, timeLimit);
@@ -168,7 +168,7 @@ public class Worker extends ProcessingNode {
 			 * retrieve data file from s3, and unpack it using gzip
 			 */
 			inputFileKey = jobMessage.getBody();
-			log.info("Now working on " + inputFileKey);
+			log.info(Thread.currentThread().getName() +  ": Now working on " + inputFileKey);
 
 			/**
 			 * get file from s3 and process with zipped arc.
@@ -318,7 +318,8 @@ public class Worker extends ProcessingNode {
 				List<Thread> threadsCopy = new ArrayList<Thread>(threads);
 				for (Thread t : threadsCopy) {
 					if (!t.isAlive()) {
-						log.warn("Thread " + t.getName() + " died.");
+						log.warn("Thread " + t.getName() + " died.\nState: " + t.getState() + "\n"
+								+ t.getStackTrace().toString());
 						threads.remove(t);
 					}
 				}

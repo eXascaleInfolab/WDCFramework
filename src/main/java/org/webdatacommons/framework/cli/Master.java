@@ -303,7 +303,7 @@ public class Master extends ProcessingNode {
 	 * */
 	private final String startupScript = "#!/bin/bash \n echo 1 > /proc/sys/vm/overcommit_memory \n wget -O /tmp/start.jar \""
 			+ getJarUrl()
-			+ "\" \n java -Xmx"
+			+ "\" \n java -Xss16m -Xmx"
 			+ getOrCry("javamemory").trim()
 			+ " -jar /tmp/start.jar > /tmp/start.log & \n";
 

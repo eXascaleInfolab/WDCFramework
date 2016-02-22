@@ -317,7 +317,7 @@ public class Worker extends ProcessingNode {
 			while (true) {
 				List<Thread> threadsCopy = new ArrayList<Thread>(threads);
 				for (Thread t : threadsCopy) {
-					if (!t.isAlive()) {
+					if (t.getState()==Thread.State.TERMINATED) {
 						log.warn("Thread " + t.getName() + " died.\nState: " + t.getState() + "\n"
 								+ t.getStackTrace().toString());
 						threads.remove(t);
@@ -349,6 +349,15 @@ public class Worker extends ProcessingNode {
 	}
 
 	public static void main(String[] args) {
+                Thread.setDefaultUncaughtExceptionHandler(
+		    new Thread.UncaughtExceptionHandler() {
+			public void uncaughtException(Thread t, Throwable x) {
+			    log.warn(t.getName() + " invoked the default "
+				+ "handler for uncaught exception: " + x);
+			    log.error(x.getStackTrace(),x);
+			}
+		    }
+		);
 		new ThreadGuard(WorkerThread.class).start();
 	}
 

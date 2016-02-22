@@ -262,7 +262,16 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 
 						Matcher feedMatcher = feedPattern.matcher(docCont);
 						while (feedMatcher.find()) {
-							feedBW.write(uri.toURL() + "\t" + feedMatcher.group(1) + "\t" + feedMatcher.group(2) + "\n");
+							feedBW.write(
+									uri.toURL() + "\t" +
+									feedMatcher.group(1)
+										.replace("\n", " ")
+										.replace("\r", " ")
+										.replace("\t", " ") + "\t" +
+									feedMatcher.group(2)
+										.replace("\n", " ")
+										.replace("\r", " ")
+										.replace("\t", " ") + "\n");
 							feedTotal++;
 						}
 

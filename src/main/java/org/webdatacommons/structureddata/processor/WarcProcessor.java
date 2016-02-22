@@ -47,7 +47,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 	// FIXME remove this if you do not want to get the links
 	Pattern linkPattern = Pattern
 			.compile(
-					"<a[^>]* href=[\\\"']?([^\\\"'>]{0,20}(\\.m.)?wikipedia\\.[^\\\"'>]{0,5}\\/w(iki){0,1}\\/[^\\\"'>]+)[\"']?[^>]*>(.+?)<\\/a>",
+					"<a[^>]* href=[\\\"']?((http|\\/\\/|https){1}([^\\\"'>]){0,20}(\\.m.)?wikipedia\\.[^\\\"'>]{0,5}\\/w(iki){0,1}\\/[^\\\"'>]+)[\"']?[^>]*>(.+?)<\\/a>",
 					Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 	// FIXME remove this if you do not want to get the feeds
 	Pattern feedPattern = Pattern
@@ -241,11 +241,14 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 									// {
 									anchorBW.write(uri.toURL()
 											+ "\t"
-											+ pageMatcher.group(4)
+											+ pageMatcher.group(6)
 													.replace("\n", " ")
 													.replace("\r", " ")
 													.replace("\t", " ") + "\t"
-											+ pageMatcher.group(1) + "\n");
+											+ pageMatcher.group(1)
+													.replace("\n", " ")
+													.replace("\r", " ")
+													.replace("\t", " ") + "\n");
 									anchorTotal++;
 									// }
 									anchorFound = true;

@@ -262,28 +262,28 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 
 						Matcher feedMatcher = feedPattern.matcher(docCont);
 						while (feedMatcher.find()) {
-							if (feedMatcher.groupCount() == 1) {
+							String group1 = feedMatcher.group(1);
+							String group2 = feedMatcher.group(2);
+							if (group1 != null && group2 != null)
 								feedBW.write(
 										uri.toURL() + "\t" +
-										feedMatcher.group(1)
-												.replace("\n", " ")
-												.replace("\r", " ")
-												.replace("\t", " ") + "\t \n");
-							} else if(feedMatcher.groupCount() == 2) {
+												group1.replace("\n", " ")
+														.replace("\r", " ")
+														.replace("\t", " ") + "\t" +
+												group2.replace("\n", " ")
+														.replace("\r", " ")
+														.replace("\t", " ") + "\n");
+							else if (group1 != null) {
 								feedBW.write(
 										uri.toURL() + "\t" +
-										feedMatcher.group(1)
-												.replace("\n", " ")
-												.replace("\r", " ")
-												.replace("\t", " ") + "\t" +
-										feedMatcher.group(2)
-												.replace("\n", " ")
-												.replace("\r", " ")
-												.replace("\t", " ") + "\n");
+												group1.replace("\n", " ")
+														.replace("\r", " ")
+														.replace("\t", " ") + "\t \n");
+							} else  {
+								log.debug("FeedRegex: first group = '" + group1 + "' second group: '" + group2 + "'");
 							}
-
-							feedTotal++;
-						}
+							feedTotal++; //TODO: @Victor, in which case do you want to increment the counter?
+						}//while
 
 						ExtractorResult result = extractor.extract(item);
 

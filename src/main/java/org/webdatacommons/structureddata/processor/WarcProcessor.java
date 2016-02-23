@@ -264,7 +264,7 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 						while (feedMatcher.find()) {
 							String group1 = feedMatcher.group(1);
 							String group2 = feedMatcher.group(2);
-							if (group1 != null && group2 != null)
+							if (group1 != null && group2 != null) {
 								feedBW.write(
 										uri.toURL() + "\t" +
 												group1.replace("\n", " ")
@@ -273,16 +273,17 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 												group2.replace("\n", " ")
 														.replace("\r", " ")
 														.replace("\t", " ") + "\n");
-							else if (group1 != null) {
+								feedTotal++;
+							} else if (group1 != null) {
 								feedBW.write(
 										uri.toURL() + "\t" +
 												group1.replace("\n", " ")
 														.replace("\r", " ")
 														.replace("\t", " ") + "\t \n");
+								feedTotal++;
 							} else  {
 								log.debug("FeedRegex: first group = '" + group1 + "' second group: '" + group2 + "'");
 							}
-							feedTotal++; //TODO: @Victor, in which case do you want to increment the counter?
 						}//while
 
 						ExtractorResult result = extractor.extract(item);

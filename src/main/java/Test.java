@@ -362,9 +362,11 @@ public class Test {
         }
     }
     public static void main(String[] args) throws Exception {
+        // put here the path to a common crawl segment
         String testfilename = "/Users/alberto/Documents/Projects/CommonCrawl/CC-MAIN-20151001222139-00005-ip-10-137-6-227.ec2.internal.warc.gz";
         FileInputStream is = new FileInputStream(testfilename);
         ReadableByteChannel rbc = Channels.newChannel(is);
+        // put here n'importe quoi...
         String inputFileKey = "test_warc.warc.gz";
         process(rbc, inputFileKey);
     }//main

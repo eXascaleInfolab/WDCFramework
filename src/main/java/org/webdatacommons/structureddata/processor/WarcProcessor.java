@@ -281,8 +281,6 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 														.replace("\r", " ")
 														.replace("\t", " ") + "\t \n");
 								feedTotal++;
-							} else  {
-								log.debug("FeedRegex: first group = '" + group1 + "' second group: '" + group2 + "'");
 							}
 						}//while
 

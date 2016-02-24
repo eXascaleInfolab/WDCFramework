@@ -279,10 +279,10 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 										uri.toURL() + "\t" +
 												group1.replace("\n", " ")
 														.replace("\r", " ")
-														.replace("\t", " ") + "\n");
+														.replace("\t", " ") + "\t \n");
 								feedTotal++;
 							} else  {
-								feedBW.write(uri.toURL() + "\n");
+								log.debug("FeedRegex: first group = '" + group1 + "' second group: '" + group2 + "'");
 							}
 						}//while
 
@@ -395,9 +395,12 @@ public class WarcProcessor extends ProcessingNode implements FileProcessor {
 						.putObject(getOrCry("resultBucket"), dfo);
 			}
 
-			S3Object dataFileObject = new S3Object(tempOutputFeedFile);
-			dataFileObject.setKey(outputFeedKey);
-			getStorage().putObject(getOrCry("resultBucket"), dataFileObject);
+			if (feedTotal > 0) {
+				S3Object dataFileObject = new S3Object(tempOutputFeedFile);
+				dataFileObject.setKey(outputFeedKey);
+				getStorage()
+						.putObject(getOrCry("resultBucket"), dataFileObject);
+			}
 
 			double duration = (System.currentTimeMillis() - start) / 1000.0;
 			double rate = (pagesTotal * 1.0) / duration;
